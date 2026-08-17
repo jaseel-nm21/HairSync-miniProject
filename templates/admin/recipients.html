@@ -1,0 +1,74 @@
+{% extends "base.html" %}
+
+{% block title %}All Recipients - Admin | HairSync{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
+        <div>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb mb-1 small">
+                    <li class="breadcrumb-item"><a href="{{ url_for('admin.dashboard') }}">Admin Dashboard</a></li>
+                    <li class="breadcrumb-item active">Recipients</li>
+                </ol>
+            </nav>
+            <h2 class="fw-bold mb-0">Registered Wig Recipients</h2>
+        </div>
+        <div class="d-flex gap-2">
+            <a href="{{ url_for('admin.dashboard') }}" class="btn btn-outline-secondary btn-sm">
+                <i class="bi bi-arrow-left me-1"></i> Back to Dashboard
+            </a>
+        </div>
+    </div>
+
+    <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
+        <div class="card-body p-0">
+            {% if recipients %}
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th class="ps-4">Recipient</th>
+                                <th>Contact &amp; District</th>
+                                <th>Date of Birth</th>
+                                <th>Reason for Medical Wig</th>
+                                <th class="pe-4 text-end">Joined</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for r in recipients %}
+                                <tr>
+                                    <td class="ps-4">
+                                        <div class="fw-bold">{{ r.name }}</div>
+                                        <small class="text-muted">{{ r.email }}</small>
+                                    </td>
+                                    <td>
+                                        <div><i class="bi bi-telephone text-muted me-1"></i>{{ r.phone }}</div>
+                                        <small class="text-muted"><i class="bi bi-geo-alt me-1"></i>{{ r.district }}</small>
+                                    </td>
+                                    <td>
+                                        <span class="small text-muted">{{ r.date_of_birth }}</span>
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-danger-subtle text-danger border border-danger-subtle px-2 py-1">
+                                            {{ r.reason_for_wig }}
+                                        </span>
+                                    </td>
+                                    <td class="pe-4 text-end text-muted small">
+                                        {{ r.created_at.strftime('%b %d, %Y') if r.created_at else 'Recent' }}
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <div class="text-center py-5 text-muted">
+                    <i class="bi bi-gift-fill fs-1 mb-2 d-block"></i>
+                    <div class="fw-semibold">No recipients registered yet.</div>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

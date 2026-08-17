@@ -1,0 +1,332 @@
+{% extends "base.html" %}
+
+{% block title %}Admin Dashboard - HairSync{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <!-- Header -->
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
+        <div>
+            <div class="d-flex align-items-center gap-2 mb-1">
+                <span class="badge badge-role-admin px-2 py-1 text-uppercase">System Admin</span>
+                <span class="text-muted small">HairSync Central Control</span>
+            </div>
+            <h2 class="fw-bold mb-0">Platform Administration Dashboard</h2>
+        </div>
+        <div class="d-flex flex-wrap gap-2">
+            <a href="{{ url_for('admin.ngos') }}" class="btn btn-hs-outline btn-sm">
+                <i class="bi bi-building-check me-1"></i> Partner NGOs
+            </a>
+            <a href="{{ url_for('admin.donation_centers') }}" class="btn btn-hs-secondary btn-sm">
+                <i class="bi bi-geo-alt me-1"></i> Donation Centers
+            </a>
+            <a href="{{ url_for('admin.users') }}" class="btn btn-hs-primary btn-sm">
+                <i class="bi bi-people me-1"></i> All Users
+            </a>
+        </div>
+    </div>
+
+    <!-- Row 1: Users & NGO Statistics Cards -->
+    <div class="row g-3 mb-3">
+        <!-- Total NGOs -->
+        <div class="col-xl-3 col-sm-6">
+            <div class="stat-card">
+                <div class="stat-icon icon-ngo">
+                    <i class="bi bi-building"></i>
+                </div>
+                <div>
+                    <div class="stat-number text-primary">{{ total_ngo_count }}</div>
+                    <div class="stat-label">Total NGOs</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Pending NGOs -->
+        <div class="col-xl-3 col-sm-6">
+            <div class="stat-card border-warning border-2">
+                <div class="stat-icon bg-warning-subtle text-warning">
+                    <i class="bi bi-hourglass-split"></i>
+                </div>
+                <div>
+                    <div class="stat-number text-warning">{{ pending_ngo_count }}</div>
+                    <div class="stat-label">Pending NGOs</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Approved NGOs -->
+        <div class="col-xl-3 col-sm-6">
+            <div class="stat-card border-success">
+                <div class="stat-icon icon-donor">
+                    <i class="bi bi-patch-check-fill"></i>
+                </div>
+                <div>
+                    <div class="stat-number text-success">{{ approved_ngo_count }}</div>
+                    <div class="stat-label">Approved NGOs</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Registered Donors -->
+        <div class="col-xl-3 col-sm-6">
+            <div class="stat-card">
+                <div class="stat-icon icon-donor">
+                    <i class="bi bi-person-heart"></i>
+                </div>
+                <div>
+                    <div class="stat-number text-teal" style="color: #0f766e;">{{ counts.donor }}</div>
+                    <div class="stat-label">Registered Donors</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Row 2: Donation Centers Statistics Cards -->
+    <div class="row g-3 mb-4">
+        <!-- Total Donation Centers -->
+        <div class="col-xl-4 col-sm-6">
+            <div class="stat-card">
+                <div class="stat-icon bg-info-subtle text-info">
+                    <i class="bi bi-shop"></i>
+                </div>
+                <div>
+                    <div class="stat-number text-info">{{ center_counts.total }}</div>
+                    <div class="stat-label">Total Donation Centers</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Active Centers -->
+        <div class="col-xl-4 col-sm-6">
+            <div class="stat-card border-success">
+                <div class="stat-icon icon-donor">
+                    <i class="bi bi-check-circle-fill"></i>
+                </div>
+                <div>
+                    <div class="stat-number text-success">{{ center_counts.active }}</div>
+                    <div class="stat-label">Active Centers</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Pending / Inactive Centers -->
+        <div class="col-xl-4 col-sm-6">
+            <div class="stat-card">
+                <div class="stat-icon bg-secondary-subtle text-secondary">
+                    <i class="bi bi-pause-circle"></i>
+                </div>
+                <div>
+                    <div class="stat-number text-secondary">{{ center_counts.pending + center_counts.inactive }}</div>
+                    <div class="stat-label">Pending / Inactive Centers</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Row 3: Appointments & Donations Statistics Cards -->
+    <div class="row g-3 mb-4">
+        <!-- Total Appointments -->
+        <div class="col-xl-3 col-sm-6">
+            <div class="stat-card">
+                <div class="stat-icon icon-admin">
+                    <i class="bi bi-calendar-event"></i>
+                </div>
+                <div>
+                    <div class="stat-number text-danger">{{ appt_counts.total }}</div>
+                    <div class="stat-label">Total Appointments (<a href="{{ url_for('admin.appointments') }}" class="small text-decoration-none">View</a>)</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Pending Appointments -->
+        <div class="col-xl-3 col-sm-6">
+            <div class="stat-card">
+                <div class="stat-icon bg-warning-subtle text-warning-emphasis">
+                    <i class="bi bi-hourglass-split"></i>
+                </div>
+                <div>
+                    <div class="stat-number text-warning-emphasis">{{ appt_counts.pending }}</div>
+                    <div class="stat-label">Pending Appointments</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Confirmed Appointments -->
+        <div class="col-xl-3 col-sm-6">
+            <div class="stat-card">
+                <div class="stat-icon icon-donor">
+                    <i class="bi bi-calendar-check"></i>
+                </div>
+                <div>
+                    <div class="stat-number text-success">{{ appt_counts.confirmed }}</div>
+                    <div class="stat-label">Confirmed Appointments</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Completed Donations -->
+        <div class="col-xl-3 col-sm-6">
+            <div class="stat-card">
+                <div class="stat-icon bg-teal-subtle" style="background-color: #ccfbf1;">
+                    <i class="bi bi-heart-pulse-fill" style="color: #0f766e;"></i>
+                </div>
+                <div>
+                    <div class="stat-number text-teal" style="color: #0f766e;">{{ don_counts.count }} <span class="fs-6 text-muted">({{ don_counts.total_length }} cm)</span></div>
+                    <div class="stat-label">Hair Donations (<a href="{{ url_for('admin.donations') }}" class="small text-decoration-none">Ledger</a>)</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Pending NGO Approvals Section -->
+    <div class="row g-4 mb-4">
+        <div class="col-12">
+            <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
+                <div class="card-header bg-white py-3 px-4 d-flex justify-content-between align-items-center border-bottom">
+
+                    <div class="d-flex align-items-center gap-2">
+                        <i class="bi bi-shield-exclamation text-warning fs-5"></i>
+                        <h5 class="mb-0 fw-bold">NGO Verification Queue</h5>
+                        {% if pending_ngo_count > 0 %}
+                            <span class="badge bg-danger rounded-pill">{{ pending_ngo_count }} Action Required</span>
+                        {% else %}
+                            <span class="badge bg-success-subtle text-success rounded-pill">All Up-to-date</span>
+                        {% endif %}
+                    </div>
+                    <a href="{{ url_for('admin.ngos', status='pending') }}" class="small text-decoration-none fw-semibold">View All</a>
+                </div>
+                <div class="card-body p-0">
+                    {% if pending_ngos %}
+                        <div class="table-responsive">
+                            <table class="table table-hover align-middle mb-0">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th class="ps-4">Organization Name</th>
+                                        <th>Reg. Number</th>
+                                        <th>Contact Person</th>
+                                        <th>Location</th>
+                                        <th>Status</th>
+                                        <th class="text-end pe-4">Admin Decision</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for ngo in pending_ngos %}
+                                        <tr>
+                                            <td class="ps-4">
+                                                <div class="fw-bold">{{ ngo.organization_name }}</div>
+                                                <small class="text-muted">{{ ngo.email }}</small>
+                                            </td>
+                                            <td><code>{{ ngo.registration_number }}</code></td>
+                                            <td>{{ ngo.account_holder }}</td>
+                                            <td>{{ ngo.district }}</td>
+                                            <td>
+                                                <span class="badge badge-status-pending text-capitalize">
+                                                    <i class="bi bi-clock me-1"></i> Pending Audit
+                                                </span>
+                                            </td>
+                                            <td class="text-end pe-4">
+                                                <div class="d-inline-flex gap-2">
+                                                    <form method="POST" action="{{ url_for('admin.approve_ngo', ngo_id=ngo.id) }}" class="d-inline">
+                                                        <button type="submit" class="btn btn-sm btn-success rounded-pill px-3" 
+                                                                data-confirm="Approve NGO '{{ ngo.organization_name }}'? This activates their full management rights.">
+                                                            <i class="bi bi-check-lg me-1"></i> Approve
+                                                        </button>
+                                                    </form>
+                                                    <form method="POST" action="{{ url_for('admin.reject_ngo', ngo_id=ngo.id) }}" class="d-inline">
+                                                        <button type="submit" class="btn btn-sm btn-outline-danger rounded-pill px-3" 
+                                                                data-confirm="Reject NGO '{{ ngo.organization_name }}'?">
+                                                            <i class="bi bi-x-lg me-1"></i> Reject
+                                                        </button>
+                                                    </form>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <div class="text-center py-5 text-muted">
+                            <i class="bi bi-check-circle text-success fs-1 mb-2 d-block"></i>
+                            <div class="fw-semibold">No pending NGO applications!</div>
+                            <small>All registered NGOs have been evaluated.</small>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Platform Users -->
+    <div class="row g-4">
+        <div class="col-12">
+            <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
+                <div class="card-header bg-white py-3 px-4 d-flex justify-content-between align-items-center border-bottom">
+                    <div class="d-flex align-items-center gap-2">
+                        <i class="bi bi-people-fill text-primary fs-5"></i>
+                        <h5 class="mb-0 fw-bold">Recent Registered Users</h5>
+                    </div>
+                    <a href="{{ url_for('admin.users') }}" class="small text-decoration-none fw-semibold">View All Users</a>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th class="ps-4">User</th>
+                                    <th>Role</th>
+                                    <th>Account Status</th>
+                                    <th>Registered Date</th>
+                                    <th class="text-end pe-4">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for u in recent_users %}
+                                    <tr>
+                                        <td class="ps-4">
+                                            <div class="d-flex align-items-center gap-2">
+                                                <span class="avatar-placeholder" style="width: 32px; height: 32px; font-size: 0.85rem;">
+                                                    {{ u.name[:1] | upper }}
+                                                </span>
+                                                <div>
+                                                    <div class="fw-bold">{{ u.name }}</div>
+                                                    <small class="text-muted">{{ u.email }}</small>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <span class="badge badge-role-{{ u.role }} text-uppercase">
+                                                {{ u.role }}
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <span class="badge badge-status-{{ u.status }} text-capitalize">
+                                                {{ u.status }}
+                                            </span>
+                                        </td>
+                                        <td class="text-muted small">
+                                            {{ u.created_at.strftime('%b %d, %Y') if u.created_at else 'Recent' }}
+                                        </td>
+                                        <td class="text-end pe-4">
+                                            {% if u.id != session.user_id %}
+                                                <form method="POST" action="{{ url_for('admin.toggle_user_status', user_id=u.id) }}" class="d-inline">
+                                                    <button type="submit" class="btn btn-sm btn-outline-secondary rounded-pill py-0 px-2 small"
+                                                            data-confirm="Toggle status for {{ u.name }}?">
+                                                        {{ 'Deactivate' if u.status == 'active' else 'Activate' }}
+                                                    </button>
+                                                </form>
+                                            {% else %}
+                                                <span class="badge bg-light text-dark border">Self</span>
+                                            {% endif %}
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
