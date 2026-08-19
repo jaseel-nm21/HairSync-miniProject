@@ -1,0 +1,251 @@
+{% extends "base.html" %}
+
+{% block title %}Donor Dashboard - HairSync{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <!-- Header -->
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
+        <div>
+            <div class="d-flex align-items-center gap-2 mb-1">
+                <span class="badge badge-role-donor px-2 py-1 text-uppercase">Hair Donor Portal</span>
+                <span class="text-muted small">ID: #{{ user.id }}</span>
+            </div>
+            <h2 class="fw-bold mb-0">Welcome, {{ user.name }}!</h2>
+            <p class="text-muted small mb-0">Thank you for pledging your hair to help cancer patients smile again.</p>
+        </div>
+        <div class="d-flex flex-wrap gap-2">
+            <a href="{{ url_for('donor.donation_centers') }}" class="btn btn-hs-primary btn-sm">
+                <i class="bi bi-geo-alt me-1"></i> Find Donation Centers
+            </a>
+            <a href="{{ url_for('donor.profile') }}" class="btn btn-hs-outline btn-sm">
+                <i class="bi bi-person-gear me-1"></i> Update Hair Profile
+            </a>
+        </div>
+    </div>
+
+    <div class="row g-4 mb-4">
+        <!-- Left Column: Hair Profile Overview -->
+        <div class="col-lg-5">
+            <div class="card border-0 shadow-sm rounded-4 h-100 overflow-hidden">
+                <div class="card-header bg-white py-3 px-4 border-bottom d-flex justify-content-between align-items-center">
+                    <h5 class="fw-bold mb-0"><i class="bi bi-scissors text-teal me-2" style="color: #0f766e;"></i> My Hair Profile</h5>
+                    <a href="{{ url_for('donor.profile') }}" class="btn btn-sm btn-outline-secondary rounded-pill py-0 px-2 small">Edit</a>
+                </div>
+                <div class="card-body p-4 text-center">
+                    <!-- Avatar / Photo -->
+                    <div class="mb-3 position-relative d-inline-block">
+                        {% if profile and profile.photo %}
+                            <img src="{{ url_for('static', filename='uploads/donors/' + profile.photo) }}" 
+                                 alt="{{ user.name }}" class="avatar-lg object-fit-cover">
+                        {% else %}
+                            <div class="avatar-placeholder avatar-lg mx-auto">
+                                {{ user.name[:1] | upper }}
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    <h4 class="fw-bold mb-1">{{ user.name }}</h4>
+                    <p class="text-muted small mb-3">
+                        <i class="bi bi-geo-alt me-1"></i> {{ profile.district if profile and profile.district else 'Location not specified' }}
+                    </p>
+
+                    <!-- Profile Completion Progress -->
+                    <div class="p-3 bg-light rounded-3 mb-4 text-start">
+                        <div class="d-flex justify-content-between align-items-center mb-1 small">
+                            <span class="fw-semibold">Profile Completion</span>
+                            <span class="fw-bold text-teal" style="color: #0f766e;">{{ completion_percentage }}%</span>
+                        </div>
+                        <div class="progress" style="height: 8px;">
+                            <div class="progress-bar" role="progressbar" 
+                                 style="width: {{ completion_percentage }}%; background-color: #0d9488;" 
+                                 aria-valuenow="{{ completion_percentage }}" aria-valuemin="0" aria-valuemax="100"></div>
+                        </div>
+                        {% if completion_percentage < 100 %}
+                            <small class="text-muted d-block mt-2" style="font-size: 0.8rem;">
+                                Complete your profile details and photo to be matched faster with donation drives.
+                            </small>
+                        {% endif %}
+                    </div>
+
+                    <!-- Profile Specs Grid -->
+                    <div class="row g-2 text-start">
+                        <div class="col-6">
+                            <div class="p-2 border rounded-3 bg-white">
+                                <small class="text-muted d-block" style="font-size: 0.75rem;">PLEDGED LENGTH</small>
+                                <span class="fw-bold text-teal" style="color: #0f766e;">
+                                    {{ profile.hair_length ~ ' Inches' if profile and profile.hair_length else 'Not set' }}
+                                </span>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="p-2 border rounded-3 bg-white">
+                                <small class="text-muted d-block" style="font-size: 0.75rem;">TEXTURE</small>
+                                <span class="fw-bold">{{ profile.hair_type if profile and profile.hair_type else 'Not set' }}</span>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="p-2 border rounded-3 bg-white">
+                                <small class="text-muted d-block" style="font-size: 0.75rem;">HAIR CONDITION</small>
+                                <span class="fw-bold">{{ profile.hair_condition if profile and profile.hair_condition else 'Not set' }}</span>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="p-2 border rounded-3 bg-white">
+                                <small class="text-muted d-block" style="font-size: 0.75rem;">PHONE</small>
+                                <span class="fw-bold">{{ profile.phone if profile and profile.phone else 'Not set' }}</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Column: Donation Guidelines & Future Module Teasers -->
+        <div class="col-lg-7">
+            <!-- Hair Donation Guidelines Card -->
+            <div class="card border-0 shadow-sm rounded-4 mb-4">
+                <div class="card-header bg-white py-3 px-4 border-bottom">
+                    <h5 class="fw-bold mb-0"><i class="bi bi-info-circle text-primary me-2"></i> Hair Donation Best Practices</h5>
+                </div>
+                <div class="card-body p-4">
+                    <div class="row g-3">
+                        <div class="col-sm-6">
+                            <div class="d-flex gap-2">
+                                <i class="bi bi-check-circle-fill text-success fs-5"></i>
+                                <div>
+                                    <div class="fw-bold small">Minimum 10 Inches</div>
+                                    <small class="text-muted">Shortest layer of your pony/braid must measure 10 inches or more.</small>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-sm-6">
+                            <div class="d-flex gap-2">
+                                <i class="bi bi-check-circle-fill text-success fs-5"></i>
+                                <div>
+                                    <div class="fw-bold small">Clean and 100% Dry</div>
+                                    <small class="text-muted">Wash and dry thoroughly before cutting. Never send damp hair as mold forms.</small>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-sm-6">
+                            <div class="d-flex gap-2">
+                                <i class="bi bi-check-circle-fill text-success fs-5"></i>
+                                <div>
+                                    <div class="fw-bold small">Pony or Braid Bound</div>
+                                    <small class="text-muted">Secure both top and bottom with elastic rubber bands before cutting.</small>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-sm-6">
+                            <div class="d-flex gap-2">
+                                <i class="bi bi-check-circle-fill text-success fs-5"></i>
+                                <div>
+                                    <div class="fw-bold small">Virgin Hair Preferred</div>
+                                    <small class="text-muted">Chemical-free hair creates the most durable, natural cranial prostheses.</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Donation Services & Actions -->
+            <div class="card border-0 shadow-sm rounded-4 mb-4">
+                <div class="card-header bg-white py-3 px-4 border-bottom d-flex justify-content-between align-items-center">
+                    <h5 class="fw-bold mb-0"><i class="bi bi-stars text-teal me-2" style="color: #0f766e;"></i> Donation Services</h5>
+                    <span class="badge small" style="background-color: var(--hs-primary-light); color: var(--hs-primary);">Active Services</span>
+                </div>
+                <div class="card-body p-4">
+                    <div class="row g-3">
+                        <div class="col-sm-6">
+                            <div class="module-teaser p-3 rounded-3 border h-100 d-flex flex-column justify-content-between">
+                                <div>
+                                    <i class="bi bi-patch-check-fill text-teal fs-3 mb-2 d-block" style="color: #0f766e;"></i>
+                                    <h6 class="fw-bold mb-1">Eligibility Checker</h6>
+                                    <p class="text-muted small mb-3">Self-assessment questionnaire to evaluate hair specs against NGO criteria.</p>
+                                </div>
+                                <a href="{{ url_for('donor.eligibility') }}" class="btn btn-hs-outline btn-sm w-100">
+                                    Check Eligibility
+                                </a>
+                            </div>
+                        </div>
+
+                        <div class="col-sm-6">
+                            <div class="module-teaser p-3 rounded-3 border h-100 d-flex flex-column justify-content-between">
+                                <div>
+                                    <i class="bi bi-calendar2-check-fill text-primary fs-3 mb-2 d-block"></i>
+                                    <h6 class="fw-bold mb-1">Book Appointment</h6>
+                                    <p class="text-muted small mb-3">Schedule a certified haircut appointment or hair drop-off with a center.</p>
+                                </div>
+                                <a href="{{ url_for('donor.book_appointment') }}" class="btn btn-hs-primary btn-sm w-100">
+                                    Book Appointment
+                                </a>
+                            </div>
+                        </div>
+
+                        <div class="col-sm-6">
+                            <div class="module-teaser p-3 rounded-3 border h-100 d-flex flex-column justify-content-between">
+                                <div>
+                                    <i class="bi bi-clock-history text-warning fs-3 mb-2 d-block"></i>
+                                    <h6 class="fw-bold mb-1">My Appointments</h6>
+                                    <p class="text-muted small mb-3">Track appointment confirmations, review dates, or manage bookings.</p>
+                                </div>
+                                <a href="{{ url_for('donor.appointments') }}" class="btn btn-outline-secondary btn-sm w-100">
+                                    View Appointments
+                                </a>
+                            </div>
+                        </div>
+
+                        <div class="col-sm-6">
+                            <div class="module-teaser p-3 rounded-3 border h-100 d-flex flex-column justify-content-between">
+                                <div>
+                                    <i class="bi bi-heart-pulse-fill text-danger fs-3 mb-2 d-block"></i>
+                                    <h6 class="fw-bold mb-1">Donation History</h6>
+                                    <p class="text-muted small mb-3">Track total centimeters donated and official records verified by NGOs.</p>
+                                </div>
+                                <a href="{{ url_for('donor.donations') }}" class="btn btn-outline-secondary btn-sm w-100">
+                                    View Donations ({{ donation_stats.count }})
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Recent Appointments Card -->
+            {% if recent_appointments %}
+            <div class="card border-0 shadow-sm rounded-4">
+                <div class="card-header bg-white py-3 px-4 border-bottom d-flex justify-content-between align-items-center">
+                    <h5 class="fw-bold mb-0"><i class="bi bi-calendar-check text-primary me-2"></i> Recent Appointments</h5>
+                    <a href="{{ url_for('donor.appointments') }}" class="btn btn-sm btn-outline-secondary rounded-pill py-0 px-2 small">View All</a>
+                </div>
+                <div class="card-body p-0">
+                    <div class="list-group list-group-flush rounded-bottom-4">
+                        {% for appt in recent_appointments %}
+                        <div class="list-group-item p-3 d-flex justify-content-between align-items-center">
+                            <div>
+                                <div class="fw-semibold">{{ appt.center_name }}</div>
+                                <small class="text-muted"><i class="bi bi-calendar3 me-1"></i> {{ appt.appointment_date }} at {{ appt.appointment_time }}</small>
+                            </div>
+                            <div>
+                                {% if appt.status == 'Confirmed' %}
+                                    <span class="badge bg-success-subtle text-success">Confirmed</span>
+                                {% elif appt.status == 'Pending' %}
+                                    <span class="badge bg-warning-subtle text-warning">Pending</span>
+                                {% elif appt.status == 'Completed' %}
+                                    <span class="badge" style="background-color: var(--hs-primary-light); color: var(--hs-primary);">Completed</span>
+                                {% else %}
+                                    <span class="badge bg-light text-secondary border">{{ appt.status }}</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

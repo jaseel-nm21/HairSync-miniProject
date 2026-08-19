@@ -1,0 +1,130 @@
+{% extends "base.html" %}
+
+{% block title %}My Hair Profile - HairSync{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
+        <div>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb mb-1 small">
+                    <li class="breadcrumb-item"><a href="{{ url_for('donor.dashboard') }}">Donor Dashboard</a></li>
+                    <li class="breadcrumb-item active">My Profile</li>
+                </ol>
+            </nav>
+            <h2 class="fw-bold mb-0">Manage Donor Hair Profile</h2>
+        </div>
+        <div class="d-flex gap-2">
+            <a href="{{ url_for('donor.dashboard') }}" class="btn btn-outline-secondary btn-sm">
+                <i class="bi bi-arrow-left me-1"></i> Back to Dashboard
+            </a>
+        </div>
+    </div>
+
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
+                <div class="card-header bg-white py-3 px-4 border-bottom">
+                    <h5 class="fw-bold mb-0"><i class="bi bi-person-gear text-teal me-2" style="color: #0f766e;"></i> Update Profile &amp; Hair Specifications</h5>
+                </div>
+                <div class="card-body p-4">
+                    <form method="POST" action="{{ url_for('donor.profile') }}" enctype="multipart/form-data" novalidate>
+                        <!-- Basic Information -->
+                        <h6 class="fw-bold text-dark mb-3"><i class="bi bi-person-badge text-primary me-1"></i> Personal &amp; Contact Details</h6>
+                        <div class="row g-3 mb-4">
+                            <div class="col-md-6">
+                                <label for="name" class="form-label">Full Name *</label>
+                                <input type="text" class="form-control" id="name" name="name" 
+                                       value="{{ user.name }}" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="email" class="form-label">Email Address</label>
+                                <input type="email" class="form-control bg-light" id="email" 
+                                       value="{{ user.email }}" readonly disabled>
+                                <div class="form-text small">Email cannot be changed directly.</div>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="phone" class="form-label">Phone Number *</label>
+                                <input type="tel" class="form-control" id="phone" name="phone" 
+                                       value="{{ profile.phone if profile else '' }}" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="district" class="form-label">District / City *</label>
+                                <input type="text" class="form-control" id="district" name="district" 
+                                       value="{{ profile.district if profile else '' }}" required>
+                            </div>
+                            <div class="col-12">
+                                <label for="address" class="form-label">Street Address *</label>
+                                <textarea class="form-control" id="address" name="address" rows="2" required>{{ profile.address if profile else '' }}</textarea>
+                            </div>
+                        </div>
+
+                        <!-- Hair Specifications -->
+                        <h6 class="fw-bold text-dark mb-3"><i class="bi bi-scissors text-teal me-1" style="color: #0f766e;"></i> Hair Specifications</h6>
+                        <div class="row g-3 mb-4">
+                            <div class="col-md-4">
+                                <label for="hair_length" class="form-label">Hair Length Available (inches)</label>
+                                <input type="number" step="0.5" min="4" max="60" class="form-control" id="hair_length" name="hair_length" 
+                                       placeholder="e.g. 14.5" value="{{ profile.hair_length if profile and profile.hair_length else '' }}">
+                                <div class="form-text small">Recommended: 10"+ for wigs.</div>
+                            </div>
+                            <div class="col-md-4">
+                                <label for="hair_type" class="form-label">Hair Texture / Type</label>
+                                <select class="form-select" id="hair_type" name="hair_type">
+                                    <option value="">Select texture...</option>
+                                    <option value="Straight" {% if profile and profile.hair_type == 'Straight' %}selected{% endif %}>Straight</option>
+                                    <option value="Wavy" {% if profile and profile.hair_type == 'Wavy' %}selected{% endif %}>Wavy</option>
+                                    <option value="Curly" {% if profile and profile.hair_type == 'Curly' %}selected{% endif %}>Curly</option>
+                                    <option value="Coily" {% if profile and profile.hair_type == 'Coily' %}selected{% endif %}>Coily / Kinky</option>
+                                </select>
+                            </div>
+                            <div class="col-md-4">
+                                <label for="hair_condition" class="form-label">Hair Condition</label>
+                                <select class="form-select" id="hair_condition" name="hair_condition">
+                                    <option value="">Select condition...</option>
+                                    <option value="Virgin/Untreated" {% if profile and profile.hair_condition == 'Virgin/Untreated' %}selected{% endif %}>Virgin (Untreated)</option>
+                                    <option value="Colored/Dyed" {% if profile and profile.hair_condition == 'Colored/Dyed' %}selected{% endif %}>Colored / Dyed</option>
+                                    <option value="Gray/Partially Gray" {% if profile and profile.hair_condition == 'Gray/Partially Gray' %}selected{% endif %}>Gray / Partially Gray</option>
+                                    <option value="Chemically Treated" {% if profile and profile.hair_condition == 'Chemically Treated' %}selected{% endif %}>Chemically Treated</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- Photo Upload with Preview -->
+                        <h6 class="fw-bold text-dark mb-3"><i class="bi bi-camera text-primary me-1"></i> Hair Photo (Optional Verification)</h6>
+                        <div class="p-3 bg-light rounded-3 mb-4 border">
+                            <div class="row align-items-center g-3">
+                                <div class="col-auto">
+                                    <div class="position-relative">
+                                        {% if profile and profile.photo %}
+                                            <img id="photoPreview" src="{{ url_for('static', filename='uploads/donors/' + profile.photo) }}" 
+                                                 alt="Donor Hair Photo" class="rounded-3 shadow-xs" style="width: 80px; height: 80px; object-fit: cover; display: block;">
+                                        {% else %}
+                                            <img id="photoPreview" src="#" alt="Preview" class="rounded-3 shadow-xs" style="width: 80px; height: 80px; object-fit: cover; display: none;">
+                                            <div class="avatar-placeholder" style="width: 80px; height: 80px; font-size: 1.75rem; border-radius: 12px;">
+                                                <i class="bi bi-camera"></i>
+                                            </div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                <div class="col">
+                                    <label for="photoInput" class="form-label mb-1">Upload Current Hair / Ponytail Photo</label>
+                                    <input class="form-control" type="file" id="photoInput" name="photo" accept=".png, .jpg, .jpeg, .webp">
+                                    <div class="form-text small">Accepted formats: JPG, PNG, WEBP. Max file size: 5MB.</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="d-flex justify-content-end gap-2">
+                            <a href="{{ url_for('donor.dashboard') }}" class="btn btn-light border rounded-pill px-4">Cancel</a>
+                            <button type="submit" class="btn btn-hs-primary rounded-pill px-4">
+                                <i class="bi bi-check2 me-1"></i> Save Changes
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
