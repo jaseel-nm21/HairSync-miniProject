@@ -1,0 +1,83 @@
+{% extends "base.html" %}
+
+{% block title %}Organization Profile - HairSync{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
+        <div>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb mb-1 small">
+                    <li class="breadcrumb-item"><a href="{{ url_for('ngo.dashboard') }}">NGO Dashboard</a></li>
+                    <li class="breadcrumb-item active">Organization Profile</li>
+                </ol>
+            </nav>
+            <h2 class="fw-bold mb-0">Manage NGO Organization Profile</h2>
+        </div>
+        <div class="d-flex gap-2">
+            <a href="{{ url_for('ngo.dashboard') }}" class="btn btn-outline-secondary btn-sm">
+                <i class="bi bi-arrow-left me-1"></i> Back to Dashboard
+            </a>
+        </div>
+    </div>
+
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
+                <div class="card-header bg-white py-3 px-4 border-bottom">
+                    <h5 class="fw-bold mb-0"><i class="bi bi-building-gear text-primary me-2"></i> Organization &amp; Administrative Credentials</h5>
+                </div>
+                <div class="card-body p-4">
+                    <form method="POST" action="{{ url_for('ngo.profile') }}" novalidate>
+                        <!-- Basic Organization Details -->
+                        <div class="row g-3 mb-4">
+                            <div class="col-md-6">
+                                <label for="org_name" class="form-label">Organization Name *</label>
+                                <input type="text" class="form-control" id="org_name" name="org_name" 
+                                       value="{{ profile.organization_name if profile else user.name }}" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="reg_number" class="form-label">Official Government Reg. No. *</label>
+                                <input type="text" class="form-control font-monospace" id="reg_number" name="reg_number" 
+                                       value="{{ profile.registration_number if profile else '' }}" required>
+                                <div class="form-text small">Must match your NGO charter documents.</div>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="email" class="form-label">Official Email Address *</label>
+                                <input type="email" class="form-control" id="email" name="email" 
+                                       value="{{ profile.email if profile else user.email }}" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="phone" class="form-label">Public Contact Hotline *</label>
+                                <input type="tel" class="form-control" id="phone" name="phone" 
+                                       value="{{ profile.phone if profile else '' }}" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="district" class="form-label">District / Operational Zone *</label>
+                                <input type="text" class="form-control" id="district" name="district" 
+                                       value="{{ profile.district if profile else '' }}" required>
+                            </div>
+                            <div class="col-12">
+                                <label for="address" class="form-label">Headquarters / Physical Office Address *</label>
+                                <textarea class="form-control" id="address" name="address" rows="2" required>{{ profile.address if profile else '' }}</textarea>
+                            </div>
+                            <div class="col-12">
+                                <label for="description" class="form-label">Organization Mission &amp; Capacity</label>
+                                <textarea class="form-control" id="description" name="description" rows="4" 
+                                          placeholder="Detail your experience in cancer support, wig crafting, or volunteer hair drives...">{{ profile.description if profile and profile.description else '' }}</textarea>
+                            </div>
+                        </div>
+
+                        <div class="d-flex justify-content-end gap-2">
+                            <a href="{{ url_for('ngo.dashboard') }}" class="btn btn-light border rounded-pill px-4">Cancel</a>
+                            <button type="submit" class="btn btn-hs-primary rounded-pill px-4">
+                                <i class="bi bi-check2 me-1"></i> Update Profile
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

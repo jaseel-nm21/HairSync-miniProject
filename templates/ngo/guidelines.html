@@ -1,0 +1,214 @@
+{% extends "base.html" %}
+
+{% block title %}Hair Donation Guidelines - {{ profile.organization_name }} - HairSync{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <!-- Breadcrumb -->
+    <nav aria-label="breadcrumb" class="mb-3">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{{ url_for('ngo.dashboard') }}">Dashboard</a></li>
+            <li class="breadcrumb-item active" aria-current="page">Donation Guidelines</li>
+        </ol>
+    </nav>
+
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
+        <div>
+            <div class="d-flex align-items-center gap-2 mb-1">
+                <span class="badge px-2 py-1 text-uppercase" style="background-color: var(--hs-primary-light); color: var(--hs-primary);">Active</span>
+                <span class="badge bg-light text-dark border">Criteria Management</span>
+            </div>
+            <h2 class="fw-bold mb-0">Hair Donation Acceptance Guidelines</h2>
+            <p class="text-muted small mb-0">Configure acceptance standards used by the automated eligibility questionnaire for your collection centers.</p>
+        </div>
+        <div class="d-flex gap-2">
+            <a href="{{ url_for('ngo.appointments') }}" class="btn btn-hs-outline btn-sm">
+                <i class="bi bi-calendar2-check me-1"></i> Donor Appointments
+            </a>
+            <a href="{{ url_for('ngo.donation_centers') }}" class="btn btn-hs-primary btn-sm">
+                <i class="bi bi-geo-alt me-1"></i> My Centers
+            </a>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <!-- Form Column -->
+        <div class="col-lg-8">
+            <div class="card border-0 shadow-sm rounded-4">
+                <div class="card-header bg-white py-3 px-4 border-bottom">
+                    <h5 class="fw-bold mb-0"><i class="bi bi-sliders text-teal me-2" style="color: #0f766e;"></i> Customize Organization Acceptance Criteria</h5>
+                </div>
+                <div class="card-body p-4">
+                    <form method="POST" action="{{ url_for('ngo.guidelines') }}">
+                        <!-- Minimum Length -->
+                        <div class="mb-4">
+                            <label for="minimum_hair_length" class="form-label fw-semibold">
+                                Minimum Hair Length Required (in cm) <span class="text-danger">*</span>
+                            </label>
+                            <div class="input-group">
+                                <input type="number" step="0.5" min="10" max="100" class="form-control" id="minimum_hair_length" 
+                                       name="minimum_hair_length" value="{{ guide.minimum_hair_length }}" required>
+                                <span class="input-group-text bg-light text-muted">cm</span>
+                            </div>
+                            <small class="text-muted">Standard is usually 20 cm (approx 8 inches). Higher lengths (25–30 cm) yield longer pediatric wigs.</small>
+                        </div>
+
+                        <!-- Allowed Hair Types -->
+                        <div class="mb-4">
+                            <label class="form-label fw-semibold">Accepted Natural Hair Textures / Types <span class="text-danger">*</span></label>
+                            <div class="row g-2">
+                                {% set accepted_types = guide.allowed_hair_types.split(',') | map('trim') | list %}
+                                {% for htype in ['Straight', 'Wavy', 'Curly', 'Coily'] %}
+                                <div class="col-sm-3">
+                                    <div class="form-check p-2 bg-light rounded-3">
+                                        <input class="form-check-input ms-1 me-2" type="checkbox" name="allowed_hair_types" 
+                                               value="{{ htype }}" id="type_{{ htype }}" 
+                                               {% if htype in accepted_types %}checked{% endif %}>
+                                        <label class="form-check-label fw-semibold small" for="type_{{ htype }}">
+                                            {{ htype }}
+                                        </label>
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            </div>
+                            <div class="mt-2">
+                                <input type="text" class="form-control form-control-sm" name="allowed_hair_types_custom" 
+                                       placeholder="Additional hair types (comma separated, optional)">
+                            </div>
+                        </div>
+
+                        <!-- Policy Radios Grid -->
+                        <div class="p-3 bg-light rounded-3 mb-4">
+                            <h6 class="fw-bold mb-3"><i class="bi bi-shield-exclamation text-warning me-2"></i> Treatments &amp; Color Acceptance Policy</h6>
+
+                            <!-- Colored Hair -->
+                            <div class="row align-items-center mb-3">
+                                <div class="col-md-5">
+                                    <label class="form-label fw-semibold mb-0 small">Artificially Colored / Dyed Hair</label>
+                                </div>
+                                <div class="col-md-7">
+                                    <select class="form-select form-select-sm" name="allow_colored_hair">
+                                        <option value="Allowed" {% if guide.allow_colored_hair == 'Allowed' %}selected{% endif %}>Allowed (Accepted unconditionally)</option>
+                                        <option value="Requires Review" {% if guide.allow_colored_hair == 'Requires Review' %}selected{% endif %}>Requires Review (Inspect at center)</option>
+                                        <option value="Not Allowed" {% if guide.allow_colored_hair == 'Not Allowed' %}selected{% endif %}>Not Allowed (Rejected)</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <!-- Chemically Treated -->
+                            <div class="row align-items-center mb-3">
+                                <div class="col-md-5">
+                                    <label class="form-label fw-semibold mb-0 small">Chemically Treated (Permed, Relaxed)</label>
+                                </div>
+                                <div class="col-md-7">
+                                    <select class="form-select form-select-sm" name="allow_chemically_treated">
+                                        <option value="Allowed" {% if guide.allow_chemically_treated == 'Allowed' %}selected{% endif %}>Allowed (Accepted unconditionally)</option>
+                                        <option value="Requires Review" {% if guide.allow_chemically_treated == 'Requires Review' %}selected{% endif %}>Requires Review (Inspect at center)</option>
+                                        <option value="Not Allowed" {% if guide.allow_chemically_treated == 'Not Allowed' %}selected{% endif %}>Not Allowed (Rejected)</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <!-- Bleached Hair -->
+                            <div class="row align-items-center">
+                                <div class="col-md-5">
+                                    <label class="form-label fw-semibold mb-0 small">Bleached / Highlighted Hair</label>
+                                </div>
+                                <div class="col-md-7">
+                                    <select class="form-select form-select-sm" name="allow_bleached_hair">
+                                        <option value="Allowed" {% if guide.allow_bleached_hair == 'Allowed' %}selected{% endif %}>Allowed (Accepted unconditionally)</option>
+                                        <option value="Requires Review" {% if guide.allow_bleached_hair == 'Requires Review' %}selected{% endif %}>Requires Review (Inspect at center)</option>
+                                        <option value="Not Allowed" {% if guide.allow_bleached_hair == 'Not Allowed' %}selected{% endif %}>Not Allowed (Rejected)</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Minimum Condition Requirement -->
+                        <div class="mb-4">
+                            <label for="minimum_condition" class="form-label fw-semibold">Minimum Hair Hygiene &amp; Condition</label>
+                            <input type="text" class="form-control" id="minimum_condition" name="minimum_condition" 
+                                   value="{{ guide.minimum_condition or 'Clean, dry, tied in ponytail or braid at both ends' }}" required>
+                            <small class="text-muted">Brief guideline displayed to donors on their self-assessment questionnaire.</small>
+                        </div>
+
+                        <!-- Additional Instructions -->
+                        <div class="mb-4">
+                            <label for="additional_requirements" class="form-label fw-semibold">Special Instructions for Donors (Optional)</label>
+                            <textarea class="form-control" id="additional_requirements" name="additional_requirements" rows="3" 
+                                      placeholder="e.g. Wash hair within 24 hours prior to appointment; layered hair is accepted if longest layer meets minimum length; gray hair is gladly accepted..."></textarea>
+                        </div>
+
+                        <!-- Submit Button -->
+                        <div class="d-flex justify-content-end">
+                            <button type="submit" class="btn btn-hs-primary px-4 py-2 fw-semibold">
+                                <i class="bi bi-check2-circle me-2"></i> Save Donation Guidelines
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sidebar / Preview -->
+        <div class="col-lg-4">
+            <div class="card border-0 shadow-sm rounded-4 mb-4">
+                <div class="card-header bg-white py-3 px-4 border-bottom">
+                    <h6 class="fw-bold mb-0"><i class="bi bi-eye text-primary me-2"></i> Donor-Facing Summary</h6>
+                </div>
+                <div class="card-body p-4 small">
+                    <div class="mb-3">
+                        <div class="text-muted">Minimum Length:</div>
+                        <div class="fw-bold fs-5 text-teal" style="color: #0f766e;">{{ guide.minimum_hair_length }} cm</div>
+                    </div>
+                    <div class="mb-3">
+                        <div class="text-muted">Accepted Textures:</div>
+                        <div class="fw-semibold">{{ guide.allowed_hair_types }}</div>
+                    </div>
+                    <div class="mb-3">
+                        <div class="text-muted">Colored Hair:</div>
+                        <div>
+                            {% if guide.allow_colored_hair == 'Allowed' %}
+                                <span class="badge bg-success-subtle text-success">Allowed</span>
+                            {% elif guide.allow_colored_hair == 'Requires Review' %}
+                                <span class="badge bg-warning-subtle text-warning">Requires Review</span>
+                            {% else %}
+                                <span class="badge bg-danger-subtle text-danger">Not Allowed</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <div class="text-muted">Chemically Treated:</div>
+                        <div>
+                            {% if guide.allow_chemically_treated == 'Allowed' %}
+                                <span class="badge bg-success-subtle text-success">Allowed</span>
+                            {% elif guide.allow_chemically_treated == 'Requires Review' %}
+                                <span class="badge bg-warning-subtle text-warning">Requires Review</span>
+                            {% else %}
+                                <span class="badge bg-danger-subtle text-danger">Not Allowed</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div>
+                        <div class="text-muted">Bleached Hair:</div>
+                        <div>
+                            {% if guide.allow_bleached_hair == 'Allowed' %}
+                                <span class="badge bg-success-subtle text-success">Allowed</span>
+                            {% elif guide.allow_bleached_hair == 'Requires Review' %}
+                                <span class="badge bg-warning-subtle text-warning">Requires Review</span>
+                            {% else %}
+                                <span class="badge bg-danger-subtle text-danger">Not Allowed</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="alert alert-info border-0 rounded-4 p-3 small">
+                <i class="bi bi-info-circle-fill me-2"></i>
+                <strong>Notice:</strong> Donors who take the eligibility questionnaire and choose your organization will be tested against these exact specifications before booking an appointment.
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
