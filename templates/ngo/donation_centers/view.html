@@ -1,0 +1,169 @@
+{% extends "base.html" %}
+
+{% block title %}{{ center.center_name }} - Details | HairSync{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <!-- Breadcrumb -->
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb mb-2 small">
+            {% if is_admin %}
+                <li class="breadcrumb-item"><a href="{{ url_for('admin.dashboard') }}">Admin Dashboard</a></li>
+                <li class="breadcrumb-item"><a href="{{ url_for('admin.donation_centers') }}">Donation Centers</a></li>
+            {% elif is_donor %}
+                <li class="breadcrumb-item"><a href="{{ url_for('donor.dashboard') }}">Donor Dashboard</a></li>
+                <li class="breadcrumb-item"><a href="{{ url_for('donor.donation_centers') }}">Donation Centers</a></li>
+            {% else %}
+                <li class="breadcrumb-item"><a href="{{ url_for('ngo.dashboard') }}">NGO Dashboard</a></li>
+                <li class="breadcrumb-item"><a href="{{ url_for('ngo.donation_centers') }}">Donation Centers</a></li>
+            {% endif %}
+            <li class="breadcrumb-item active">{{ center.center_name }}</li>
+        </ol>
+    </nav>
+
+    <div class="row justify-content-center">
+        <div class="col-lg-9">
+            <div class="card border-0 shadow-sm rounded-4 overflow-hidden mb-4">
+                <!-- Card Header -->
+                <div class="card-header bg-white py-3 px-4 border-bottom d-flex flex-column flex-sm-row justify-content-between align-items-sm-center gap-2">
+                    <div class="d-flex align-items-center gap-2">
+                        <span class="stat-icon icon-ngo" style="width: 44px; height: 44px; font-size: 1.3rem;">
+                            <i class="bi bi-shop"></i>
+                        </span>
+                        <div>
+                            <h4 class="fw-bold mb-0 text-dark">{{ center.center_name }}</h4>
+                            <small class="text-muted">Managed by <strong>{{ center.ngo_name or 'Partner NGO' }}</strong></small>
+                        </div>
+                    </div>
+                    <div>
+                        {% if center.status == 'Active' %}
+                            <span class="badge badge-status-active px-3 py-2"><i class="bi bi-check-circle me-1"></i> Active</span>
+                        {% elif center.status == 'Approved' %}
+                            <span class="badge badge-status-approved px-3 py-2"><i class="bi bi-patch-check me-1"></i> Approved</span>
+                        {% elif center.status == 'Pending' %}
+                            <span class="badge badge-status-pending px-3 py-2"><i class="bi bi-clock me-1"></i> Pending</span>
+                        {% elif center.status == 'Inactive' %}
+                            <span class="badge badge-status-inactive px-3 py-2"><i class="bi bi-pause-circle me-1"></i> Inactive</span>
+                        {% else %}
+                            <span class="badge bg-danger-subtle text-danger px-3 py-2">{{ center.status }}</span>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <div class="card-body p-4 p-md-5">
+                    <!-- Section 1: Overview and Description -->
+                    <div class="mb-4">
+                        <h6 class="fw-bold text-uppercase text-muted small mb-2">About this Collection Center</h6>
+                        <p class="text-muted bg-light p-3 rounded-3 border mb-0">
+                            {{ center.description or "Physical hair collection center operated in partnership with HairSync. Donors can drop off hair bundles meeting standard sanitary guidelines." }}
+                        </p>
+                    </div>
+
+                    <div class="row g-4 mb-4">
+                        <!-- Location & Address -->
+                        <div class="col-md-6">
+                            <div class="p-3 bg-light rounded-3 border h-100">
+                                <h6 class="fw-bold mb-3 text-primary d-flex align-items-center gap-2">
+                                    <i class="bi bi-geo-alt"></i> Location Address
+                                </h6>
+                                <p class="fw-semibold mb-1">{{ center.address }}</p>
+                                <p class="mb-1 text-muted">{{ center.city }}, {{ center.district }}</p>
+                                <p class="mb-2 text-muted">{{ center.state }} &bull; PIN: <code>{{ center.pincode }}</code></p>
+                            </div>
+                        </div>
+
+                        <!-- Timings & Operating Schedule -->
+                        <div class="col-md-6">
+                            <div class="p-3 bg-light rounded-3 border h-100">
+                                <h6 class="fw-bold mb-3 text-primary d-flex align-items-center gap-2">
+                                    <i class="bi bi-clock-history"></i> Schedule &amp; Timings
+                                </h6>
+                                <div class="d-flex justify-content-between py-1 border-bottom">
+                                    <span class="text-muted">Working Days:</span>
+                                    <span class="fw-semibold">{{ center.working_days }}</span>
+                                </div>
+                                <div class="d-flex justify-content-between py-1 border-bottom">
+                                    <span class="text-muted">Daily Hours:</span>
+                                    <span class="fw-semibold">{{ center.opening_time }} - {{ center.closing_time }}</span>
+                                </div>
+                                <div class="d-flex justify-content-between py-1">
+                                    <span class="text-muted">Affiliated NGO:</span>
+                                    <span class="fw-semibold">{{ center.ngo_name }}</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Contact Hotline & Coordinates -->
+                    <div class="row g-4 mb-4">
+                        <div class="col-md-6">
+                            <div class="p-3 bg-light rounded-3 border h-100">
+                                <h6 class="fw-bold mb-3 text-primary d-flex align-items-center gap-2">
+                                    <i class="bi bi-telephone"></i> Direct Contact
+                                </h6>
+                                <div class="d-flex justify-content-between py-1 border-bottom">
+                                    <span class="text-muted">Helpline Phone:</span>
+                                    <a href="tel:{{ center.phone }}" class="fw-bold text-decoration-none">{{ center.phone }}</a>
+                                </div>
+                                <div class="d-flex justify-content-between py-1">
+                                    <span class="text-muted">Direct Email:</span>
+                                    <span class="fw-semibold">{{ center.email or 'N/A' }}</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-md-6">
+                            <div class="p-3 bg-light rounded-3 border h-100">
+                                <h6 class="fw-bold mb-3 text-primary d-flex align-items-center gap-2">
+                                    <i class="bi bi-crosshair"></i> Geographic Coordinates
+                                </h6>
+                                <div class="d-flex justify-content-between py-1 border-bottom">
+                                    <span class="text-muted">Latitude:</span>
+                                    <code>{{ "%.6f"|format(center.latitude) if center.latitude is not none else 'Not registered' }}</code>
+                                </div>
+                                <div class="d-flex justify-content-between py-1 border-bottom">
+                                    <span class="text-muted">Longitude:</span>
+                                    <code>{{ "%.6f"|format(center.longitude) if center.longitude is not none else 'Not registered' }}</code>
+                                </div>
+                                <small class="text-muted d-block mt-2">
+                                    <i class="bi bi-info-circle me-1"></i> Coordinates stored for the upcoming nearby donation center map feature.
+                                </small>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Actions Bar -->
+                    <div class="d-flex justify-content-between align-items-center pt-3 border-top">
+                        {% if is_admin %}
+                            <a href="{{ url_for('admin.donation_centers') }}" class="btn btn-outline-secondary rounded-pill px-4">
+                                <i class="bi bi-arrow-left me-1"></i> Back to Center Oversight
+                            </a>
+                            <div class="d-flex gap-2">
+                                <form method="POST" action="{{ url_for('admin.toggle_center_status', center_id=center.id) }}">
+                                    <button type="submit" class="btn btn-hs-outline rounded-pill px-3">
+                                        <i class="bi bi-arrow-repeat me-1"></i> Toggle Status ({{ 'Deactivate' if center.status == 'Active' else 'Activate' }})
+                                    </button>
+                                </form>
+                            </div>
+                        {% elif is_donor %}
+                            <a href="{{ url_for('donor.donation_centers') }}" class="btn btn-outline-secondary rounded-pill px-4">
+                                <i class="bi bi-arrow-left me-1"></i> Back to Donation Centers
+                            </a>
+                            <a href="tel:{{ center.phone }}" class="btn btn-hs-primary rounded-pill px-4">
+                                <i class="bi bi-telephone-fill me-1"></i> Call Collection Hub
+                            </a>
+                        {% else %}
+                            <a href="{{ url_for('ngo.donation_centers') }}" class="btn btn-outline-secondary rounded-pill px-4">
+                                <i class="bi bi-arrow-left me-1"></i> Back to My Centers
+                            </a>
+                            <a href="{{ url_for('ngo.edit_center', center_id=center.id) }}" class="btn btn-hs-primary rounded-pill px-4">
+                                <i class="bi bi-pencil me-1"></i> Edit Center Details
+                            </a>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

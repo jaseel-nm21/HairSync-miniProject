@@ -1,0 +1,204 @@
+{% extends "base.html" %}
+
+{% block title %}Manage Donation Centers - {{ profile.organization_name if profile else 'NGO' }} | HairSync{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <!-- Header -->
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
+        <div>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb mb-1 small">
+                    <li class="breadcrumb-item"><a href="{{ url_for('ngo.dashboard') }}">NGO Dashboard</a></li>
+                    <li class="breadcrumb-item active">Donation Centers</li>
+                </ol>
+            </nav>
+            <h2 class="fw-bold mb-0">Donation Collection Centers</h2>
+            <p class="text-muted small mb-0">
+                Manage physical hair collection hubs, operating hours, and location coordinates.
+            </p>
+        </div>
+        <div class="d-flex gap-2">
+            <a href="{{ url_for('ngo.dashboard') }}" class="btn btn-hs-outline btn-sm">
+                <i class="bi bi-arrow-left me-1"></i> Dashboard
+            </a>
+            <a href="{{ url_for('ngo.add_center') }}" class="btn btn-hs-primary btn-sm" id="btnAddCenter">
+                <i class="bi bi-plus-circle me-1"></i> Add Donation Center
+            </a>
+        </div>
+    </div>
+
+    <!-- Quick Stats Cards -->
+    <div class="row g-3 mb-4">
+        <div class="col-md-4 col-sm-6">
+            <div class="stat-card">
+                <div class="stat-icon icon-ngo">
+                    <i class="bi bi-shop"></i>
+                </div>
+                <div>
+                    <div class="stat-number text-primary">{{ counts.total }}</div>
+                    <div class="stat-label">Total Centers</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4 col-sm-6">
+            <div class="stat-card border-success">
+                <div class="stat-icon icon-donor">
+                    <i class="bi bi-check-circle"></i>
+                </div>
+                <div>
+                    <div class="stat-number text-success">{{ counts.active }}</div>
+                    <div class="stat-label">Active &amp; Verified</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4 col-sm-6">
+            <div class="stat-card">
+                <div class="stat-icon bg-secondary-subtle text-secondary">
+                    <i class="bi bi-pause-circle"></i>
+                </div>
+                <div>
+                    <div class="stat-number text-secondary">{{ counts.inactive + counts.pending }}</div>
+                    <div class="stat-label">Inactive / Pending</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Search & Filter Controls -->
+    <div class="card border-0 shadow-sm rounded-4 mb-4">
+        <div class="card-body p-3">
+            <form method="GET" action="{{ url_for('ngo.donation_centers') }}" class="row g-2 align-items-center">
+                <div class="col-md-6 col-sm-12">
+                    <div class="input-group input-group-sm">
+                        <span class="input-group-text bg-white border-end-0"><i class="bi bi-search text-muted"></i></span>
+                        <input type="text" name="q" class="form-control border-start-0" placeholder="Search by center name, district, or city..." value="{{ search_query }}">
+                    </div>
+                </div>
+                <div class="col-md-4 col-sm-8">
+                    <select name="status" class="form-select form-select-sm">
+                        <option value="all" {% if status_filter == 'all' %}selected{% endif %}>All Statuses ({{ counts.total }})</option>
+                        <option value="active" {% if status_filter == 'active' %}selected{% endif %}>Active ({{ counts.active }})</option>
+                        <option value="inactive" {% if status_filter == 'inactive' %}selected{% endif %}>Inactive ({{ counts.inactive }})</option>
+                        <option value="pending" {% if status_filter == 'pending' %}selected{% endif %}>Pending ({{ counts.pending }})</option>
+                    </select>
+                </div>
+                <div class="col-md-2 col-sm-4 d-flex gap-1">
+                    <button type="submit" class="btn btn-sm btn-hs-primary w-100">Filter</button>
+                    {% if search_query or status_filter != 'all' %}
+                        <a href="{{ url_for('ngo.donation_centers') }}" class="btn btn-sm btn-outline-secondary" title="Clear filters">
+                            <i class="bi bi-x"></i>
+                        </a>
+                    {% endif %}
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Centers Table -->
+    <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
+        <div class="card-body p-0">
+            {% if centers %}
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0" id="donationCentersTable">
+                        <thead class="table-light">
+                            <tr>
+                                <th class="ps-4">Center Details</th>
+                                <th>District &amp; Location</th>
+                                <th>Contact &amp; Timings</th>
+                                <th>Coordinates</th>
+                                <th>Status</th>
+                                <th class="text-end pe-4">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for c in centers %}
+                                <tr>
+                                    <td class="ps-4">
+                                        <div class="fw-bold fs-6 text-dark">{{ c.center_name }}</div>
+                                        <small class="text-muted d-block text-truncate" style="max-width: 260px;" title="{{ c.address }}">
+                                            <i class="bi bi-geo-alt me-1"></i>{{ c.address }}
+                                        </small>
+                                        <small class="text-muted font-monospace">PIN: {{ c.pincode }}</small>
+                                    </td>
+                                    <td>
+                                        <div class="fw-semibold">{{ c.district }}</div>
+                                        <small class="text-muted">{{ c.city }}, {{ c.state }}</small>
+                                    </td>
+                                    <td>
+                                        <div><i class="bi bi-telephone text-muted me-1"></i>{{ c.phone }}</div>
+                                        <small class="text-muted">
+                                            <i class="bi bi-clock me-1"></i>{{ c.opening_time }} - {{ c.closing_time }}
+                                        </small><br>
+                                        <small class="text-muted badge bg-light text-secondary border mt-1">
+                                            {{ c.working_days }}
+                                        </small>
+                                    </td>
+                                    <td>
+                                        {% if c.latitude and c.longitude %}
+                                            <span class="badge bg-light text-dark border font-monospace" title="Stored for nearby map">
+                                                <i class="bi bi-crosshair me-1 text-primary"></i>
+                                                {{ "%.4f"|format(c.latitude) }}, {{ "%.4f"|format(c.longitude) }}
+                                            </span>
+                                        {% else %}
+                                            <span class="badge bg-light text-muted border">Not set</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if c.status == 'Active' %}
+                                            <span class="badge badge-status-active px-2 py-1"><i class="bi bi-check-circle me-1"></i> Active</span>
+                                        {% elif c.status == 'Approved' %}
+                                            <span class="badge badge-status-approved px-2 py-1"><i class="bi bi-patch-check me-1"></i> Approved</span>
+                                        {% elif c.status == 'Pending' %}
+                                            <span class="badge badge-status-pending px-2 py-1"><i class="bi bi-clock me-1"></i> Pending</span>
+                                        {% elif c.status == 'Inactive' %}
+                                            <span class="badge badge-status-inactive px-2 py-1"><i class="bi bi-pause-circle me-1"></i> Inactive</span>
+                                        {% else %}
+                                            <span class="badge bg-danger-subtle text-danger px-2 py-1">{{ c.status }}</span>
+                                        {% endif %}
+                                    </td>
+                                    <td class="text-end pe-4">
+                                        <div class="d-inline-flex gap-1">
+                                            <a href="{{ url_for('ngo.view_center', center_id=c.id) }}" 
+                                               class="btn btn-sm btn-outline-secondary rounded-pill px-2 py-1" 
+                                               title="View Details">
+                                                <i class="bi bi-eye"></i> View
+                                            </a>
+                                            <a href="{{ url_for('ngo.edit_center', center_id=c.id) }}" 
+                                               class="btn btn-sm btn-outline-primary rounded-pill px-2 py-1" 
+                                               title="Edit Center">
+                                                <i class="bi bi-pencil"></i> Edit
+                                            </a>
+                                            <form method="POST" action="{{ url_for('ngo.delete_center', center_id=c.id) }}" class="d-inline">
+                                                <button type="submit" class="btn btn-sm btn-outline-danger rounded-pill px-2 py-1" 
+                                                        data-confirm="Are you sure you want to permanently delete '{{ c.center_name }}'?"
+                                                        title="Delete Center">
+                                                    <i class="bi bi-trash"></i> Delete
+                                                </button>
+                                            </form>
+                                        </div>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <div class="text-center py-5 text-muted">
+                    <i class="bi bi-shop-window fs-1 mb-2 d-block text-primary opacity-50"></i>
+                    <div class="fw-semibold fs-5">No Donation Centers Found</div>
+                    {% if search_query or status_filter != 'all' %}
+                        <p class="small text-muted mb-3">No centers match your active search filter.</p>
+                        <a href="{{ url_for('ngo.donation_centers') }}" class="btn btn-sm btn-outline-secondary rounded-pill">Reset Filter</a>
+                    {% else %}
+                        <p class="small text-muted mb-3">Your organization hasn't registered any physical hair collection hubs yet.</p>
+                        <a href="{{ url_for('ngo.add_center') }}" class="btn btn-hs-primary rounded-pill px-4">
+                            <i class="bi bi-plus-circle me-1"></i> Add Your First Center
+                        </a>
+                    {% endif %}
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

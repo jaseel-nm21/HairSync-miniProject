@@ -1,0 +1,202 @@
+{% extends "base.html" %}
+
+{% block title %}{{ 'Add New Donation Center' if action == 'add' else 'Edit Donation Center' }} - HairSync{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <!-- Breadcrumb & Header -->
+    <div class="mb-4">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb mb-1 small">
+                <li class="breadcrumb-item"><a href="{{ url_for('ngo.dashboard') }}">NGO Dashboard</a></li>
+                <li class="breadcrumb-item"><a href="{{ url_for('ngo.donation_centers') }}">Donation Centers</a></li>
+                <li class="breadcrumb-item active">{{ 'Add Center' if action == 'add' else 'Edit Center' }}</li>
+            </ol>
+        </nav>
+        <h2 class="fw-bold mb-0">{{ 'Add New Donation Center' if action == 'add' else 'Edit Donation Center: ' ~ center.center_name }}</h2>
+        <p class="text-muted small mb-0">
+            Provide the physical address, operating schedule, and geographic coordinates for this collection center.
+        </p>
+    </div>
+
+    <div class="row justify-content-center">
+        <div class="col-lg-10">
+            <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
+                <div class="card-header bg-white py-3 px-4 border-bottom d-flex justify-content-between align-items-center">
+                    <div class="d-flex align-items-center gap-2">
+                        <i class="bi bi-shop text-primary fs-5"></i>
+                        <span class="fw-bold fs-6">Donation Center Details</span>
+                    </div>
+                    <span class="text-muted small"><span class="text-danger">*</span> Indicates required fields</span>
+                </div>
+
+                <div class="card-body p-4 p-md-5">
+                    <form method="POST" action="{{ url_for('ngo.add_center') if action == 'add' else url_for('ngo.edit_center', center_id=center_id) }}" novalidate>
+                        
+                        <!-- Section 1: Basic Information -->
+                        <h6 class="fw-bold text-uppercase text-muted small mb-3 border-bottom pb-2">
+                            <i class="bi bi-info-circle me-1 text-primary"></i> 1. Center Identification
+                        </h6>
+                        <div class="row g-3 mb-4">
+                            <div class="col-md-8">
+                                <label for="center_name" class="form-label fw-semibold small">Center Name <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" id="center_name" name="center_name" 
+                                       value="{{ center.center_name if center else '' }}" 
+                                       placeholder="e.g., Malappuram Hair Donation Center" required>
+                                <div class="form-text">Name displayed to donors and on public directories.</div>
+                            </div>
+
+                            <div class="col-md-4">
+                                <label for="status" class="form-label fw-semibold small">Operational Status <span class="text-danger">*</span></label>
+                                <select class="form-select" id="status" name="status">
+                                    <option value="Active" {% if center and center.status == 'Active' %}selected{% endif %}>Active (Accepting Donations)</option>
+                                    <option value="Inactive" {% if center and center.status == 'Inactive' %}selected{% endif %}>Inactive (Temporarily Closed)</option>
+                                    <option value="Pending" {% if center and center.status == 'Pending' %}selected{% endif %}>Pending</option>
+                                </select>
+                            </div>
+
+                            <div class="col-12">
+                                <label for="description" class="form-label fw-semibold small">Center Description</label>
+                                <textarea class="form-control" id="description" name="description" rows="2" 
+                                          placeholder="e.g., Hair donation center for collecting and managing hair donations. Salon drop-off facilities available.">{{ center.description if center else '' }}</textarea>
+                            </div>
+                        </div>
+
+                        <!-- Section 2: Physical Location -->
+                        <h6 class="fw-bold text-uppercase text-muted small mb-3 border-bottom pb-2">
+                            <i class="bi bi-geo-alt me-1 text-primary"></i> 2. Location &amp; Address
+                        </h6>
+                        <div class="row g-3 mb-4">
+                            <div class="col-12">
+                                <label for="address" class="form-label fw-semibold small">Physical Address <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" id="address" name="address" 
+                                       value="{{ center.address if center else '' }}" 
+                                       placeholder="Street name, building, landmarks" required>
+                            </div>
+
+                            <div class="col-md-4">
+                                <label for="district" class="form-label fw-semibold small">District <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" id="district" name="district" 
+                                       value="{{ center.district if center else '' }}" 
+                                       placeholder="e.g., Malappuram" required>
+                            </div>
+
+                            <div class="col-md-4">
+                                <label for="city" class="form-label fw-semibold small">City / Town <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" id="city" name="city" 
+                                       value="{{ center.city if center else '' }}" 
+                                       placeholder="e.g., Malappuram" required>
+                            </div>
+
+                            <div class="col-md-2">
+                                <label for="state" class="form-label fw-semibold small">State <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" id="state" name="state" 
+                                       value="{{ center.state if center and center.state else 'Kerala' }}" required>
+                            </div>
+
+                            <div class="col-md-2">
+                                <label for="pincode" class="form-label fw-semibold small">Pincode <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control font-monospace" id="pincode" name="pincode" 
+                                       value="{{ center.pincode if center else '' }}" 
+                                       placeholder="676505" maxlength="6" required>
+                            </div>
+                        </div>
+
+                        <!-- Section 3: Geographic Coordinates (For Nearby Map in Future Modules) -->
+                        <h6 class="fw-bold text-uppercase text-muted small mb-3 border-bottom pb-2 d-flex justify-content-between align-items-center">
+                            <span><i class="bi bi-crosshair me-1 text-primary"></i> 3. Geographic Coordinates</span>
+                            <span class="badge bg-light text-dark border fw-normal" style="font-size: 0.75rem;">Stored for Nearby Map Feature</span>
+                        </h6>
+                        <div class="row g-3 mb-4">
+                            <div class="col-md-6">
+                                <label for="latitude" class="form-label fw-semibold small">Latitude (Degrees)</label>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-light"><i class="bi bi-compass"></i></span>
+                                    <input type="number" step="0.000001" min="-90" max="90" class="form-control font-monospace" 
+                                           id="latitude" name="latitude" 
+                                           value="{{ center.latitude if center and center.latitude is not none else '' }}" 
+                                           placeholder="e.g., 11.0510">
+                                </div>
+                                <div class="form-text">Valid range: -90.0 to +90.0 degrees.</div>
+                            </div>
+
+                            <div class="col-md-6">
+                                <label for="longitude" class="form-label fw-semibold small">Longitude (Degrees)</label>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-light"><i class="bi bi-compass"></i></span>
+                                    <input type="number" step="0.000001" min="-180" max="180" class="form-control font-monospace" 
+                                           id="longitude" name="longitude" 
+                                           value="{{ center.longitude if center and center.longitude is not none else '' }}" 
+                                           placeholder="e.g., 76.0711">
+                                </div>
+                                <div class="form-text">Valid range: -180.0 to +180.0 degrees.</div>
+                            </div>
+                        </div>
+
+                        <!-- Section 4: Contact & Operating Hours -->
+                        <h6 class="fw-bold text-uppercase text-muted small mb-3 border-bottom pb-2">
+                            <i class="bi bi-clock-history me-1 text-primary"></i> 4. Contact &amp; Operating Hours
+                        </h6>
+                        <div class="row g-3 mb-4">
+                            <div class="col-md-6">
+                                <label for="phone" class="form-label fw-semibold small">Center Contact Phone <span class="text-danger">*</span></label>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-light"><i class="bi bi-telephone"></i></span>
+                                    <input type="tel" class="form-control" id="phone" name="phone" 
+                                           value="{{ center.phone if center else '' }}" 
+                                           placeholder="9876543210" required>
+                                </div>
+                            </div>
+
+                            <div class="col-md-6">
+                                <label for="email" class="form-label fw-semibold small">Center Email (Optional)</label>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-light"><i class="bi bi-envelope"></i></span>
+                                    <input type="email" class="form-control" id="email" name="email" 
+                                           value="{{ center.email if center and center.email else '' }}" 
+                                           placeholder="center@organization.org">
+                                </div>
+                            </div>
+
+                            <div class="col-md-4">
+                                <label for="opening_time" class="form-label fw-semibold small">Opening Time <span class="text-danger">*</span></label>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-light"><i class="bi bi-sun"></i></span>
+                                    <input type="time" class="form-control" id="opening_time" name="opening_time" 
+                                           value="{{ center.opening_time if center and center.opening_time else '09:00' }}" required>
+                                </div>
+                            </div>
+
+                            <div class="col-md-4">
+                                <label for="closing_time" class="form-label fw-semibold small">Closing Time <span class="text-danger">*</span></label>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-light"><i class="bi bi-moon"></i></span>
+                                    <input type="time" class="form-control" id="closing_time" name="closing_time" 
+                                           value="{{ center.closing_time if center and center.closing_time else '17:00' }}" required>
+                                </div>
+                            </div>
+
+                            <div class="col-md-4">
+                                <label for="working_days" class="form-label fw-semibold small">Working Days <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" id="working_days" name="working_days" 
+                                       value="{{ center.working_days if center and center.working_days else 'Monday - Saturday' }}" 
+                                       placeholder="e.g., Monday - Saturday" required>
+                            </div>
+                        </div>
+
+                        <!-- Submit Buttons -->
+                        <div class="d-flex justify-content-between align-items-center pt-3 border-top">
+                            <a href="{{ url_for('ngo.donation_centers') }}" class="btn btn-outline-secondary rounded-pill px-4">
+                                <i class="bi bi-arrow-left me-1"></i> Cancel
+                            </a>
+                            <button type="submit" class="btn btn-hs-primary rounded-pill px-5 shadow-sm" id="btnSubmitCenter">
+                                <i class="bi bi-check-circle me-1"></i> {{ 'Create Center' if action == 'add' else 'Save Changes' }}
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
