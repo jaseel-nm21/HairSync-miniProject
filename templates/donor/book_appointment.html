@@ -1,0 +1,173 @@
+{% extends "base.html" %}
+
+{% block title %}Book Hair Donation Appointment - HairSync{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <!-- Breadcrumb -->
+    <nav aria-label="breadcrumb" class="mb-3">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{{ url_for('donor.dashboard') }}">Dashboard</a></li>
+            <li class="breadcrumb-item"><a href="{{ url_for('donor.appointments') }}">Appointments</a></li>
+            <li class="breadcrumb-item active" aria-current="page">Book Appointment</li>
+        </ol>
+    </nav>
+
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
+        <div>
+            <div class="d-flex align-items-center gap-2 mb-1">
+                <span class="badge px-2 py-1 text-uppercase" style="background-color: var(--hs-primary-light); color: var(--hs-primary);">Active</span>
+                <span class="badge bg-light text-dark border">Certified Centers</span>
+            </div>
+            <h2 class="fw-bold mb-0">Schedule Hair Donation Appointment</h2>
+            <p class="text-muted small mb-0">Select an approved collection center or partner salon to schedule your donation haircut or drop-off.</p>
+        </div>
+        <div>
+            <a href="{{ url_for('donor.eligibility') }}" class="btn btn-hs-outline btn-sm">
+                <i class="bi bi-shield-check me-1"></i> Check Hair Eligibility
+            </a>
+        </div>
+    </div>
+
+    <div class="row g-4 justify-content-center">
+        <div class="col-lg-8">
+            <div class="card border-0 shadow-sm rounded-4">
+                <div class="card-header bg-white py-3 px-4 border-bottom">
+                    <h5 class="fw-bold mb-0"><i class="bi bi-calendar2-plus text-teal me-2" style="color: #0f766e;"></i> Appointment Details</h5>
+                </div>
+                <div class="card-body p-4">
+                    {% if not centers %}
+                    <div class="alert alert-warning border-0 rounded-3 mb-0">
+                        <i class="bi bi-exclamation-triangle me-2"></i>
+                        No active donation centers are currently available for booking. Please check back soon or contact support.
+                    </div>
+                    {% else %}
+                    <form method="POST" action="{{ url_for('donor.book_appointment') }}">
+                        <!-- Center Selection -->
+                        <div class="mb-3">
+                            <label for="center_id" class="form-label fw-semibold">Select Donation Center / Drop Hub <span class="text-danger">*</span></label>
+                            <select class="form-select select2" id="center_id" name="center_id" required onchange="updateCenterInfo(this)">
+                                <option value="">-- Choose a collection center --</option>
+                                {% for c in centers %}
+                                    <option value="{{ c.id }}" 
+                                            data-ngo="{{ c.ngo_name }}"
+                                            data-address="{{ c.address }}, {{ c.city }}, {{ c.district }}"
+                                            data-phone="{{ c.phone }}"
+                                            data-hours="{{ c.opening_time }} - {{ c.closing_time }} ({{ c.working_days }})"
+                                            {% if preselected_center_id|string == c.id|string %}selected{% endif %}>
+                                        {{ c.center_name }} ({{ c.city }}, {{ c.district }}) — {{ c.ngo_name }}
+                                    </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                        <!-- Dynamic Center Preview Box -->
+                        <div id="centerInfoBox" class="p-3 mb-4 rounded-3 bg-light border border-dashed text-muted small" style="display: none;">
+                            <div class="fw-bold text-dark mb-1" id="centerInfoNgo"></div>
+                            <div class="mb-1"><i class="bi bi-geo-alt me-1 text-primary"></i> <span id="centerInfoAddress"></span></div>
+                            <div class="mb-1"><i class="bi bi-clock me-1 text-teal"></i> <span id="centerInfoHours"></span></div>
+                            <div><i class="bi bi-telephone me-1 text-success"></i> <span id="centerInfoPhone"></span></div>
+                        </div>
+
+                        <!-- Date & Time Row -->
+                        <div class="row g-3 mb-3">
+                            <div class="col-md-6">
+                                <label for="appointment_date" class="form-label fw-semibold">Appointment Date <span class="text-danger">*</span></label>
+                                <input type="date" class="form-control" id="appointment_date" name="appointment_date" 
+                                       min="{{ today }}" value="{{ today }}" required>
+                                <small class="text-muted">Must be today or a future date.</small>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="appointment_time" class="form-label fw-semibold">Preferred Time <span class="text-danger">*</span></label>
+                                <input type="time" class="form-control" id="appointment_time" name="appointment_time" 
+                                       value="10:00" required>
+                                <small class="text-muted">Centers operate during their working hours.</small>
+                            </div>
+                        </div>
+
+                        <!-- Purpose -->
+                        <div class="mb-3">
+                            <label for="purpose" class="form-label fw-semibold">Appointment Purpose</label>
+                            <select class="form-select" id="purpose" name="purpose">
+                                <option value="Hair Donation" selected>Hair Donation (Haircut / Ponytail Handover)</option>
+                                <option value="Pre-Cut Hair Measurement & Inspection">Pre-Cut Hair Measurement & Inspection</option>
+                                <option value="Consultation & Hair Drop-off">Consultation & Hair Drop-off</option>
+                            </select>
+                        </div>
+
+                        <!-- Donor Notes -->
+                        <div class="mb-4">
+                            <label for="donor_notes" class="form-label fw-semibold">Special Notes / Requests (Optional)</label>
+                            <textarea class="form-control" id="donor_notes" name="donor_notes" rows="3" 
+                                      placeholder="e.g. Accompanied by family, hair already cut and tied, questions regarding wig crafting..."></textarea>
+                        </div>
+
+                        <!-- Confirmation Button -->
+                        <div class="d-flex justify-content-between align-items-center">
+                            <a href="{{ url_for('donor.appointments') }}" class="btn btn-outline-secondary">
+                                Cancel
+                            </a>
+                            <button type="submit" class="btn btn-hs-primary px-4 py-2 fw-semibold">
+                                <i class="bi bi-calendar2-check me-2"></i> Book Appointment
+                            </button>
+                        </div>
+                    </form>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Side: Preparation Checklist -->
+        <div class="col-lg-4">
+            <div class="card border-0 shadow-sm rounded-4 mb-4">
+                <div class="card-header bg-white py-3 px-4 border-bottom">
+                    <h6 class="fw-bold mb-0"><i class="bi bi-card-checklist text-primary me-2"></i> Before You Arrive</h6>
+                </div>
+                <div class="card-body p-4 small">
+                    <ul class="list-unstyled mb-0">
+                        <li class="d-flex gap-2 mb-3">
+                            <i class="bi bi-check2-circle text-teal fs-5 flex-shrink-0" style="color: #0f766e;"></i>
+                            <div><strong>Wash Hair:</strong> Shampoo cleanly without conditioner or heavy oils within 24 hours.</div>
+                        </li>
+                        <li class="d-flex gap-2 mb-3">
+                            <i class="bi bi-check2-circle text-teal fs-5 flex-shrink-0" style="color: #0f766e;"></i>
+                            <div><strong>Completely Dry:</strong> Ensure your hair is bone dry before arrival.</div>
+                        </li>
+                        <li class="d-flex gap-2 mb-3">
+                            <i class="bi bi-check2-circle text-teal fs-5 flex-shrink-0" style="color: #0f766e;"></i>
+                            <div><strong>Rubber Bands:</strong> Bring or ask salon staff for rubber bands to secure top and bottom of ponytail.</div>
+                        </li>
+                        <li class="d-flex gap-2">
+                            <i class="bi bi-check2-circle text-teal fs-5 flex-shrink-0" style="color: #0f766e;"></i>
+                            <div><strong>Notification:</strong> You'll receive NGO confirmation status right in your dashboard.</div>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function updateCenterInfo(select) {
+    var box = document.getElementById('centerInfoBox');
+    if (!select.value) {
+        box.style.display = 'none';
+        return;
+    }
+    var opt = select.options[select.selectedIndex];
+    document.getElementById('centerInfoNgo').textContent = 'Affiliated NGO: ' + opt.getAttribute('data-ngo');
+    document.getElementById('centerInfoAddress').textContent = opt.getAttribute('data-address');
+    document.getElementById('centerInfoHours').textContent = 'Hours: ' + opt.getAttribute('data-hours');
+    document.getElementById('centerInfoPhone').textContent = 'Contact: ' + opt.getAttribute('data-phone');
+    box.style.display = 'block';
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    var centerSelect = document.getElementById('center_id');
+    if (centerSelect && centerSelect.value) {
+        updateCenterInfo(centerSelect);
+    }
+});
+</script>
+{% endblock %}

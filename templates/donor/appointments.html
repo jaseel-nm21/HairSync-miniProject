@@ -1,0 +1,190 @@
+{% extends "base.html" %}
+
+{% block title %}My Appointments - HairSync{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <!-- Breadcrumb -->
+    <nav aria-label="breadcrumb" class="mb-3">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{{ url_for('donor.dashboard') }}">Dashboard</a></li>
+            <li class="breadcrumb-item active" aria-current="page">My Appointments</li>
+        </ol>
+    </nav>
+
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
+        <div>
+            <div class="d-flex align-items-center gap-2 mb-1">
+                <span class="badge px-2 py-1 text-uppercase" style="background-color: var(--hs-primary-light); color: var(--hs-primary);">Active</span>
+                <span class="badge bg-light text-dark border">Hair Donation Schedule</span>
+            </div>
+            <h2 class="fw-bold mb-0">My Appointments</h2>
+            <p class="text-muted small mb-0">Track confirmation, status updates, and history for your scheduled hair donation visits.</p>
+        </div>
+        <div class="d-flex gap-2">
+            <a href="{{ url_for('donor.eligibility') }}" class="btn btn-hs-outline btn-sm">
+                <i class="bi bi-shield-check me-1"></i> Check Eligibility
+            </a>
+            <a href="{{ url_for('donor.book_appointment') }}" class="btn btn-hs-primary btn-sm">
+                <i class="bi bi-calendar-plus me-1"></i> Book New Appointment
+            </a>
+        </div>
+    </div>
+
+    <!-- Appointments List -->
+    {% if not appointments %}
+    <div class="card border-0 shadow-sm rounded-4 p-5 text-center">
+        <div class="mb-3">
+            <div class="rounded-circle bg-light d-inline-flex align-items-center justify-content-center" style="width: 72px; height: 72px;">
+                <i class="bi bi-calendar-x text-muted fs-2"></i>
+            </div>
+        </div>
+        <h4 class="fw-bold mb-2">No Appointments Scheduled Yet</h4>
+        <p class="text-muted mb-4">Take the first step to creating a wig for a patient in need by booking your first hair donation visit.</p>
+        <div class="d-flex justify-content-center gap-3">
+            <a href="{{ url_for('donor.eligibility') }}" class="btn btn-hs-outline">
+                <i class="bi bi-shield-check me-1"></i> Take Eligibility Quiz
+            </a>
+            <a href="{{ url_for('donor.book_appointment') }}" class="btn btn-hs-primary">
+                <i class="bi bi-calendar-plus me-1"></i> Schedule Appointment Now
+            </a>
+        </div>
+    </div>
+    {% else %}
+    <div class="row g-4">
+        {% for a in appointments %}
+        <div class="col-lg-6">
+            <div class="card border-0 shadow-sm rounded-4 h-100 overflow-hidden">
+                <!-- Status Colored Top Border -->
+                <div style="height: 5px; 
+                    {% if a.status == 'Confirmed' %}background-color: #10b981;
+                    {% elif a.status == 'Pending' %}background-color: #f59e0b;
+                    {% elif a.status == 'Completed' %}background-color: #0f766e;
+                    {% elif a.status == 'Rejected' %}background-color: #ef4444;
+                    {% else %}background-color: #6b7280;{% endif %}">
+                </div>
+                
+                <div class="card-body p-4">
+                    <div class="d-flex justify-content-between align-items-start mb-3">
+                        <div>
+                            <span class="text-muted small">Appointment #{{ a.id }}</span>
+                            <h5 class="fw-bold mb-0 text-dark">{{ a.center_name }}</h5>
+                            <small class="text-muted"><i class="bi bi-building me-1"></i> {{ a.ngo_name }}</small>
+                        </div>
+                        <div>
+                            {% if a.status == 'Confirmed' %}
+                                <span class="badge bg-success-subtle text-success border border-success-subtle px-3 py-1 rounded-pill">
+                                    <i class="bi bi-check-circle me-1"></i> Confirmed
+                                </span>
+                            {% elif a.status == 'Pending' %}
+                                <span class="badge bg-warning-subtle text-warning-emphasis border border-warning-subtle px-3 py-1 rounded-pill">
+                                    <i class="bi bi-hourglass-split me-1"></i> Awaiting NGO Confirmation
+                                </span>
+                            {% elif a.status == 'Completed' %}
+                                <span class="badge bg-info-subtle text-teal border border-info-subtle px-3 py-1 rounded-pill" style="color: #0f766e !important;">
+                                    <i class="bi bi-check2-all me-1"></i> Completed &amp; Donated
+                                </span>
+                            {% elif a.status == 'Rejected' %}
+                                <span class="badge bg-danger-subtle text-danger border border-danger-subtle px-3 py-1 rounded-pill">
+                                    <i class="bi bi-x-circle me-1"></i> Rejected
+                                </span>
+                            {% elif a.status == 'Cancelled' %}
+                                <span class="badge bg-secondary-subtle text-secondary border border-secondary-subtle px-3 py-1 rounded-pill">
+                                    <i class="bi bi-slash-circle me-1"></i> Cancelled
+                                </span>
+                            {% else %}
+                                <span class="badge bg-light text-dark border px-3 py-1 rounded-pill">{{ a.status }}</span>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <!-- Details Grid -->
+                    <div class="p-3 bg-light rounded-3 mb-3 small">
+                        <div class="row g-2">
+                            <div class="col-sm-6">
+                                <div class="text-muted">Date:</div>
+                                <div class="fw-bold"><i class="bi bi-calendar3 me-1 text-primary"></i> {{ a.appointment_date }}</div>
+                            </div>
+                            <div class="col-sm-6">
+                                <div class="text-muted">Time:</div>
+                                <div class="fw-bold"><i class="bi bi-clock me-1 text-teal"></i> {{ a.appointment_time }}</div>
+                            </div>
+                            <div class="col-12 mt-2">
+                                <div class="text-muted">Center Address:</div>
+                                <div><i class="bi bi-geo-alt me-1 text-danger"></i> {{ a.center_address }}, {{ a.center_city }}, {{ a.center_district }}</div>
+                            </div>
+                            <div class="col-12 mt-1">
+                                <div class="text-muted">Center Phone:</div>
+                                <div><i class="bi bi-telephone me-1 text-success"></i> {{ a.center_phone }}</div>
+                            </div>
+                            <div class="col-12 mt-1">
+                                <div class="text-muted">Purpose:</div>
+                                <div class="fw-semibold">{{ a.purpose }}</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    {% if a.donor_notes %}
+                    <div class="mb-3 small">
+                        <span class="text-muted">Your Notes:</span>
+                        <div class="p-2 bg-white border rounded text-secondary">{{ a.donor_notes }}</div>
+                    </div>
+                    {% endif %}
+
+                    {% if a.ngo_notes %}
+                    <div class="mb-3 small">
+                        <span class="text-muted">NGO Response / Notes:</span>
+                        <div class="p-2 bg-white border border-info-subtle rounded text-dark">
+                            <i class="bi bi-chat-left-text me-1 text-info"></i> {{ a.ngo_notes }}
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    <!-- Footer Actions -->
+                    <div class="d-flex justify-content-between align-items-center pt-2 border-top">
+                        <small class="text-muted">Booked on {{ a.created_at }}</small>
+                        <div>
+                            {% if a.status in ('Pending', 'Confirmed') %}
+                            <button type="button" class="btn btn-outline-danger btn-sm" data-bs-toggle="modal" data-bs-target="#cancelModal{{ a.id }}">
+                                <i class="bi bi-x-circle me-1"></i> Cancel Appointment
+                            </button>
+
+                            <!-- Cancel Modal -->
+                            <div class="modal fade" id="cancelModal{{ a.id }}" tabindex="-1" aria-labelledby="cancelModalLabel{{ a.id }}" aria-hidden="true">
+                                <div class="modal-dialog modal-dialog-centered">
+                                    <div class="modal-content border-0 shadow">
+                                        <div class="modal-header border-bottom">
+                                            <h5 class="modal-title fw-bold" id="cancelModalLabel{{ a.id }}">Cancel Appointment #{{ a.id }}</h5>
+                                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                        </div>
+                                        <form method="POST" action="{{ url_for('donor.cancel_appointment', appointment_id=a.id) }}">
+                                            <div class="modal-body">
+                                                <p>Are you sure you want to cancel your hair donation appointment at <strong>{{ a.center_name }}</strong> on <strong>{{ a.appointment_date }} at {{ a.appointment_time }}</strong>?</p>
+                                                <div class="mb-3">
+                                                    <label for="cancel_reason{{ a.id }}" class="form-label small fw-semibold">Reason for Cancellation (Optional):</label>
+                                                    <textarea class="form-control form-control-sm" id="cancel_reason{{ a.id }}" name="cancel_reason" rows="2" placeholder="e.g. Rescheduling date, personal conflict..."></textarea>
+                                                </div>
+                                            </div>
+                                            <div class="modal-footer border-top">
+                                                <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Keep Appointment</button>
+                                                <button type="submit" class="btn btn-danger btn-sm">Yes, Cancel Appointment</button>
+                                            </div>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+                            {% elif a.status == 'Completed' %}
+                            <a href="{{ url_for('donor.donations') }}" class="btn btn-hs-primary btn-sm">
+                                <i class="bi bi-award me-1"></i> View Donation Record
+                            </a>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

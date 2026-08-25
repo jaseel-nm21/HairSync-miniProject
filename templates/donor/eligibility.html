@@ -1,0 +1,274 @@
+{% extends "base.html" %}
+
+{% block title %}Hair Donation Eligibility Checker - HairSync{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <!-- Breadcrumb & Header -->
+    <nav aria-label="breadcrumb" class="mb-3">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{{ url_for('donor.dashboard') }}">Dashboard</a></li>
+            <li class="breadcrumb-item active" aria-current="page">Eligibility Checker</li>
+        </ol>
+    </nav>
+
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
+        <div>
+            <div class="d-flex align-items-center gap-2 mb-1">
+                <span class="badge px-2 py-1 text-uppercase" style="background-color: var(--hs-primary-light); color: var(--hs-primary);">Active</span>
+                <span class="badge bg-light text-dark border">Self-Assessment Tool</span>
+            </div>
+            <h2 class="fw-bold mb-0">Hair Donation Eligibility Questionnaire</h2>
+            <p class="text-muted small mb-0">Evaluate whether your hair meets medical wig-making standards before booking an appointment.</p>
+        </div>
+        <div class="d-flex gap-2">
+            <a href="{{ url_for('donor.appointments') }}" class="btn btn-hs-outline btn-sm">
+                <i class="bi bi-calendar-check me-1"></i> My Appointments
+            </a>
+            <a href="{{ url_for('donor.book_appointment') }}" class="btn btn-hs-primary btn-sm">
+                <i class="bi bi-calendar-plus me-1"></i> Book Appointment
+            </a>
+        </div>
+    </div>
+
+    <!-- Evaluation Result Banner (if evaluated) -->
+    {% if result %}
+    <div class="row mb-4">
+        <div class="col-12">
+            {% if result.status == 'Eligible' %}
+            <div class="card border-0 shadow-sm rounded-4 overflow-hidden" style="border-left: 6px solid #10b981 !important; background: linear-gradient(135deg, #f0fdf4 0%, #ffffff 100%);">
+                <div class="card-body p-4">
+                    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3">
+                        <div class="d-flex align-items-center gap-3">
+                            <div class="rounded-circle bg-success text-white d-flex align-items-center justify-content-center" style="width: 56px; height: 56px; font-size: 1.75rem;">
+                                <i class="bi bi-check-lg"></i>
+                            </div>
+                            <div>
+                                <span class="badge bg-success text-uppercase px-2 py-1 mb-1">Status: Eligible</span>
+                                <h4 class="fw-bold text-success mb-1">Your Hair Is Ready For Donation!</h4>
+                                <p class="text-muted mb-0">Your specifications meet the requirements. Cancer patients will benefit greatly from your donation.</p>
+                            </div>
+                        </div>
+                        <div>
+                            <a href="{{ url_for('donor.book_appointment') }}{% if form_data.ngo_id %}?ngo_id={{ form_data.ngo_id }}{% endif %}" class="btn btn-success px-4 py-2 fw-semibold rounded-3 shadow-sm">
+                                <i class="bi bi-calendar2-check me-1"></i> Book Appointment Now
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% elif result.status == 'Requires Review' %}
+            <div class="card border-0 shadow-sm rounded-4 overflow-hidden" style="border-left: 6px solid #f59e0b !important; background: linear-gradient(135deg, #fffbeb 0%, #ffffff 100%);">
+                <div class="card-body p-4">
+                    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3">
+                        <div class="d-flex align-items-center gap-3">
+                            <div class="rounded-circle bg-warning text-dark d-flex align-items-center justify-content-center" style="width: 56px; height: 56px; font-size: 1.75rem;">
+                                <i class="bi bi-exclamation-triangle"></i>
+                            </div>
+                            <div>
+                                <span class="badge bg-warning text-dark text-uppercase px-2 py-1 mb-1">Status: Requires Center Review</span>
+                                <h4 class="fw-bold text-dark mb-1">In-Person Assessment Recommended</h4>
+                                <p class="text-muted mb-0">Your hair length qualifies, but chemical treatments or hair type will need a quick physical evaluation by our salon partner.</p>
+                            </div>
+                        </div>
+                        <div>
+                            <a href="{{ url_for('donor.book_appointment') }}{% if form_data.ngo_id %}?ngo_id={{ form_data.ngo_id }}{% endif %}" class="btn btn-warning text-dark px-4 py-2 fw-semibold rounded-3 shadow-sm">
+                                <i class="bi bi-calendar-event me-1"></i> Schedule Consultation
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% else %}
+            <div class="card border-0 shadow-sm rounded-4 overflow-hidden" style="border-left: 6px solid #ef4444 !important; background: linear-gradient(135deg, #fef2f2 0%, #ffffff 100%);">
+                <div class="card-body p-4">
+                    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3">
+                        <div class="d-flex align-items-center gap-3">
+                            <div class="rounded-circle bg-danger text-white d-flex align-items-center justify-content-center" style="width: 56px; height: 56px; font-size: 1.75rem;">
+                                <i class="bi bi-x-lg"></i>
+                            </div>
+                            <div>
+                                <span class="badge bg-danger text-uppercase px-2 py-1 mb-1">Status: Currently Not Eligible</span>
+                                <h4 class="fw-bold text-danger mb-1">Criteria Not Met At This Time</h4>
+                                <p class="text-muted mb-0">Don't worry! With a little more growth and care, your hair will soon be ready to make a significant impact.</p>
+                            </div>
+                        </div>
+                        <div>
+                            <a href="{{ url_for('donor.donation_centers') }}" class="btn btn-outline-secondary px-4 py-2 fw-semibold rounded-3">
+                                <i class="bi bi-geo-alt me-1"></i> Explore Centers
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Detailed Evaluation Messages -->
+            <div class="card border-0 shadow-sm rounded-4 mt-3">
+                <div class="card-header bg-white py-3 px-4 border-bottom">
+                    <h6 class="fw-bold mb-0"><i class="bi bi-list-check me-2 text-primary"></i> Detailed Parameter Evaluation</h6>
+                </div>
+                <div class="card-body p-4">
+                    <ul class="list-group list-group-flush">
+                        {% for msg in result.messages %}
+                        <li class="list-group-item px-0 py-2 d-flex align-items-center gap-2">
+                            {% if 'below' in msg or 'not accepted' in msg %}
+                                <i class="bi bi-x-circle-fill text-danger fs-5"></i>
+                                <span class="text-danger fw-semibold">{{ msg }}</span>
+                            {% elif 'review' in msg or 'special processing' in msg or 'manual' in msg %}
+                                <i class="bi bi-exclamation-circle-fill text-warning fs-5"></i>
+                                <span class="text-dark">{{ msg }}</span>
+                            {% else %}
+                                <i class="bi bi-check-circle-fill text-success fs-5"></i>
+                                <span class="text-success fw-semibold">{{ msg }}</span>
+                            {% endif %}
+                        </li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <div class="row g-4">
+        <!-- Form Column -->
+        <div class="col-lg-7">
+            <div class="card border-0 shadow-sm rounded-4">
+                <div class="card-header bg-white py-3 px-4 border-bottom">
+                    <h5 class="fw-bold mb-0"><i class="bi bi-scissors text-teal me-2" style="color: #0f766e;"></i> Enter Your Hair Specifications</h5>
+                </div>
+                <div class="card-body p-4">
+                    <form method="POST" action="{{ url_for('donor.eligibility') }}">
+                        <!-- Target NGO -->
+                        <div class="mb-3">
+                            <label for="ngo_id" class="form-label fw-semibold">Target NGO Guidelines (Optional)</label>
+                            <select class="form-select" id="ngo_id" name="ngo_id">
+                                <option value="">HairSync Universal Standard Guidelines (Default)</option>
+                                {% for ngo in ngos %}
+                                    <option value="{{ ngo.id }}" {% if form_data.ngo_id|string == ngo.id|string %}selected{% endif %}>
+                                        {{ ngo.organization_name }} ({{ ngo.district }})
+                                    </option>
+                                {% endfor %}
+                            </select>
+                            <small class="text-muted">Select an NGO if you intend to donate to a specific organization's collection centers.</small>
+                        </div>
+
+                        <!-- Hair Length -->
+                        <div class="mb-3">
+                            <label for="hair_length" class="form-label fw-semibold">Estimated Cuttable Length (in cm) <span class="text-danger">*</span></label>
+                            <div class="input-group">
+                                <input type="number" step="0.5" min="1" max="150" class="form-control" id="hair_length" name="hair_length" 
+                                       value="{{ form_data.hair_length }}" placeholder="e.g. 25.0" required>
+                                <span class="input-group-text bg-light text-muted">Centimeters</span>
+                            </div>
+                            <div class="d-flex justify-content-between mt-1 text-muted small">
+                                <span>Minimum standard is usually 20 cm (~8 inches)</span>
+                                <span>10 in = 25.4 cm | 12 in = 30.5 cm</span>
+                            </div>
+                        </div>
+
+                        <!-- Hair Type -->
+                        <div class="mb-3">
+                            <label for="hair_type" class="form-label fw-semibold">Natural Hair Texture / Type <span class="text-danger">*</span></label>
+                            <select class="form-select" id="hair_type" name="hair_type" required>
+                                <option value="Straight" {% if form_data.hair_type == 'Straight' %}selected{% endif %}>Straight</option>
+                                <option value="Wavy" {% if form_data.hair_type == 'Wavy' %}selected{% endif %}>Wavy</option>
+                                <option value="Curly" {% if form_data.hair_type == 'Curly' %}selected{% endif %}>Curly</option>
+                                <option value="Coily" {% if form_data.hair_type == 'Coily' %}selected{% endif %}>Coily</option>
+                            </select>
+                        </div>
+
+                        <!-- Hair Condition -->
+                        <div class="mb-3">
+                            <label for="hair_condition" class="form-label fw-semibold">General Condition</label>
+                            <select class="form-select" id="hair_condition" name="hair_condition">
+                                <option value="Virgin/Untreated" {% if form_data.hair_condition == 'Virgin/Untreated' %}selected{% endif %}>Virgin / 100% Untreated (Best for wigs)</option>
+                                <option value="Good Condition" {% if form_data.hair_condition == 'Good Condition' %}selected{% endif %}>Good Condition (Healthy, minimal styling)</option>
+                                <option value="Dry / Split Ends" {% if form_data.hair_condition == 'Dry / Split Ends' %}selected{% endif %}>Dry or Split Ends (May require trimming)</option>
+                                <option value="Treated / Processed" {% if form_data.hair_condition == 'Treated / Processed' %}selected{% endif %}>Treated / Processed</option>
+                            </select>
+                        </div>
+
+                        <!-- Treatments & Toggles -->
+                        <div class="mb-4 p-3 bg-light rounded-3">
+                            <div class="fw-semibold mb-2">Chemical &amp; Dye History</div>
+                            <div class="form-check form-switch mb-2">
+                                <input class="form-check-input" type="checkbox" role="switch" id="is_colored" name="is_colored" {% if form_data.is_colored %}checked{% endif %}>
+                                <label class="form-check-label" for="is_colored">Artificially colored or henna-dyed</label>
+                            </div>
+                            <div class="form-check form-switch mb-2">
+                                <input class="form-check-input" type="checkbox" role="switch" id="is_chemically_treated" name="is_chemically_treated" {% if form_data.is_chemically_treated %}checked{% endif %}>
+                                <label class="form-check-label" for="is_chemically_treated">Chemically treated (permed, relaxed, rebound, keratin)</label>
+                            </div>
+                            <div class="form-check form-switch">
+                                <input class="form-check-input" type="checkbox" role="switch" id="is_bleached" name="is_bleached" {% if form_data.is_bleached %}checked{% endif %}>
+                                <label class="form-check-label" for="is_bleached">Bleached or heavily lightened</label>
+                            </div>
+                        </div>
+
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-hs-primary py-2 fw-semibold">
+                                <i class="bi bi-shield-check me-2"></i> Check Hair Eligibility
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Guidelines Sidebar -->
+        <div class="col-lg-5">
+            <div class="card border-0 shadow-sm rounded-4 mb-4">
+                <div class="card-header bg-white py-3 px-4 border-bottom">
+                    <h5 class="fw-bold mb-0"><i class="bi bi-info-circle text-primary me-2"></i> Hair Donation Best Practices</h5>
+                </div>
+                <div class="card-body p-4">
+                    <div class="d-flex gap-3 mb-3">
+                        <div class="text-teal fs-4" style="color: #0f766e;"><i class="bi bi-droplet-half"></i></div>
+                        <div>
+                            <div class="fw-bold small">Clean &amp; 100% Dry</div>
+                            <small class="text-muted">Wash and thoroughly dry hair before cutting. Damp hair can develop mildew in storage and cannot be crafted into wigs.</small>
+                        </div>
+                    </div>
+
+                    <div class="d-flex gap-3 mb-3">
+                        <div class="text-teal fs-4" style="color: #0f766e;"><i class="bi bi-link-45deg"></i></div>
+                        <div>
+                            <div class="fw-bold small">Secure with Elastic Bands</div>
+                            <small class="text-muted">Tie hair tightly in a ponytail or braid at both ends before cutting to preserve hair cuticle direction.</small>
+                        </div>
+                    </div>
+
+                    <div class="d-flex gap-3 mb-3">
+                        <div class="text-teal fs-4" style="color: #0f766e;"><i class="bi bi-rulers"></i></div>
+                        <div>
+                            <div class="fw-bold small">Length Matters</div>
+                            <small class="text-muted">Most medical wigs require at least 20 cm (8 inches) of hair length, pulled straight from tip to cut.</small>
+                        </div>
+                    </div>
+
+                    <div class="d-flex gap-3">
+                        <div class="text-teal fs-4" style="color: #0f766e;"><i class="bi bi-heart-fill text-danger"></i></div>
+                        <div>
+                            <div class="fw-bold small">Layered &amp; Gray Hair</div>
+                            <small class="text-muted">Gray hair is warmly welcomed! Layered hair is accepted as long as the longest layer meets minimum requirements.</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card border-0 shadow-sm rounded-4 bg-light">
+                <div class="card-body p-4 text-center">
+                    <i class="bi bi-calendar2-plus fs-2 text-primary mb-2 d-block"></i>
+                    <h6 class="fw-bold mb-1">Ready to donate?</h6>
+                    <p class="text-muted small mb-3">Book an appointment directly at a verified donation center near you.</p>
+                    <a href="{{ url_for('donor.book_appointment') }}" class="btn btn-hs-primary btn-sm px-3">
+                        Schedule Appointment
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
