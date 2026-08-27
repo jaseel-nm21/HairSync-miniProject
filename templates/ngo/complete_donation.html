@@ -1,0 +1,131 @@
+{% extends "base.html" %}
+
+{% block title %}Record Completed Hair Donation - HairSync{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <!-- Breadcrumb -->
+    <nav aria-label="breadcrumb" class="mb-3">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{{ url_for('ngo.dashboard') }}">Dashboard</a></li>
+            <li class="breadcrumb-item"><a href="{{ url_for('ngo.appointments') }}">Appointments</a></li>
+            <li class="breadcrumb-item active" aria-current="page">Complete Donation</li>
+        </ol>
+    </nav>
+
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
+        <div>
+            <div class="d-flex align-items-center gap-2 mb-1">
+                <span class="badge px-2 py-1 text-uppercase" style="background-color: var(--hs-primary-light); color: var(--hs-primary);">Active</span>
+                <span class="badge bg-light text-dark border">Fulfillment Logging</span>
+            </div>
+            <h2 class="fw-bold mb-0">Record Completed Hair Donation</h2>
+            <p class="text-muted small mb-0">Log measured hair specifications to mark Appointment #{{ appointment.id }} as fulfilled.</p>
+        </div>
+        <div>
+            <a href="{{ url_for('ngo.appointments') }}" class="btn btn-outline-secondary btn-sm">
+                <i class="bi bi-arrow-left me-1"></i> Back to Appointments
+            </a>
+        </div>
+    </div>
+
+    <div class="row g-4 justify-content-center">
+        <div class="col-lg-8">
+            <div class="card border-0 shadow-sm rounded-4">
+                <div class="card-header bg-white py-3 px-4 border-bottom">
+                    <h5 class="fw-bold mb-0"><i class="bi bi-scissors text-teal me-2" style="color: #0f766e;"></i> Donation Verification &amp; Measurement</h5>
+                </div>
+                <div class="card-body p-4">
+                    <!-- Donor & Appointment Summary Box -->
+                    <div class="p-3 bg-light rounded-3 mb-4 small">
+                        <div class="row g-2">
+                            <div class="col-sm-6">
+                                <span class="text-muted">Donor Name:</span>
+                                <div class="fw-bold text-dark">{{ appointment.donor_name }}</div>
+                            </div>
+                            <div class="col-sm-6">
+                                <span class="text-muted">Donor Contact:</span>
+                                <div><i class="bi bi-telephone text-success me-1"></i> {{ appointment.donor_phone or 'N/A' }}</div>
+                            </div>
+                            <div class="col-sm-6 mt-2">
+                                <span class="text-muted">Collection Center:</span>
+                                <div class="fw-semibold">{{ appointment.center_name }} ({{ appointment.center_city }})</div>
+                            </div>
+                            <div class="col-sm-6 mt-2">
+                                <span class="text-muted">Scheduled Appointment:</span>
+                                <div><i class="bi bi-calendar3 text-primary me-1"></i> {{ appointment.appointment_date }} at {{ appointment.appointment_time }}</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <form method="POST" action="{{ url_for('ngo.complete_appointment', appointment_id=appointment.id) }}">
+                        <!-- Hair Length -->
+                        <div class="mb-3">
+                            <label for="hair_length" class="form-label fw-semibold">Actual Measured Cut Length (in cm) <span class="text-danger">*</span></label>
+                            <div class="input-group">
+                                <input type="number" step="0.5" min="5" max="150" class="form-control" id="hair_length" name="hair_length" 
+                                       value="{{ appointment.donor_hair_length or 25.0 }}" required>
+                                <span class="input-group-text bg-light text-muted">Centimeters</span>
+                            </div>
+                            <small class="text-muted">Measure pulled straight from the top cut band to the longest tip.</small>
+                        </div>
+
+                        <!-- Hair Type -->
+                        <div class="mb-3">
+                            <label for="hair_type" class="form-label fw-semibold">Hair Texture / Type <span class="text-danger">*</span></label>
+                            <select class="form-select" id="hair_type" name="hair_type" required>
+                                <option value="Straight" {% if appointment.donor_hair_type == 'Straight' %}selected{% endif %}>Straight</option>
+                                <option value="Wavy" {% if appointment.donor_hair_type == 'Wavy' or not appointment.donor_hair_type %}selected{% endif %}>Wavy</option>
+                                <option value="Curly" {% if appointment.donor_hair_type == 'Curly' %}selected{% endif %}>Curly</option>
+                                <option value="Coily" {% if appointment.donor_hair_type == 'Coily' %}selected{% endif %}>Coily</option>
+                            </select>
+                        </div>
+
+                        <!-- Hair Condition -->
+                        <div class="mb-3">
+                            <label for="hair_condition" class="form-label fw-semibold">Hair Condition &amp; Cleanliness <span class="text-danger">*</span></label>
+                            <select class="form-select" id="hair_condition" name="hair_condition" required>
+                                <option value="Virgin / Untreated" selected>Virgin / Untreated (Sanitized &amp; Dry)</option>
+                                <option value="Color-Treated / Healthy">Color-Treated / Healthy</option>
+                                <option value="Gray / Natural">Gray / Natural</option>
+                                <option value="Lightly Layered">Lightly Layered</option>
+                            </select>
+                        </div>
+
+                        <!-- Donation Date -->
+                        <div class="row g-3 mb-3">
+                            <div class="col-md-6">
+                                <label for="donation_date" class="form-label fw-semibold">Fulfillment Date <span class="text-danger">*</span></label>
+                                <input type="date" class="form-control" id="donation_date" name="donation_date" 
+                                       value="{{ today }}" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="quantity_or_estimated_weight" class="form-label fw-semibold">Estimated Weight / Quantity</label>
+                                <input type="text" class="form-control" id="quantity_or_estimated_weight" name="quantity_or_estimated_weight" 
+                                       placeholder="e.g. 1 Ponytail (~110 grams)">
+                            </div>
+                        </div>
+
+                        <!-- Staff Notes -->
+                        <div class="mb-4">
+                            <label for="notes" class="form-label fw-semibold">Technical &amp; Batch Notes (Optional)</label>
+                            <textarea class="form-control" id="notes" name="notes" rows="3" 
+                                      placeholder="e.g. Cleanly cut by certified stylist, tied securely with 3 rubber bands, allocated to batch #WIG-KL-2026..."></textarea>
+                        </div>
+
+                        <!-- Action Buttons -->
+                        <div class="d-flex justify-content-between align-items-center">
+                            <a href="{{ url_for('ngo.appointments') }}" class="btn btn-outline-secondary">
+                                Cancel
+                            </a>
+                            <button type="submit" class="btn btn-hs-primary px-4 py-2 fw-semibold">
+                                <i class="bi bi-check2-all me-2"></i> Save Donation &amp; Complete Appointment
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
