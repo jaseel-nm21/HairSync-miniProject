@@ -1,0 +1,9 @@
+venv/
+__pycache__/
+*.pyc
+*.db
+.env
+*.sqlite3
+instance/
+static/uploads/donors/*
+!static/uploads/donors/.gitkeep
