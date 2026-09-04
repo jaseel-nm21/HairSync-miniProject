@@ -271,3 +271,12 @@ You can sign in immediately using these pre-configured accounts (or click any of
   - **Interactive Geolocation Map**: Leaflet.js + OpenStreetMap showing nearby donation centers with distance calculation.
   - **Wig Tracking Suite**: Recipient custom wig request submission, NGO approval & assignment, tracking ID generation, step-by-step courier status (Dispatched &rarr; In Transit &rarr; Delivered).
   - **Analytics**: Chart.js donation trends and community impact graphs.
+
+
+## Test Accounts
+| Role | Email | Password |
+|------|-------|----------|
+| Admin | admin@hairsync.com | Admin@123 |
+| Donor | donor@example.com | Password@123 |
+| NGO | contact@hopehair.org | Password@123 |
+| Recipient | recipient@example.com | Password@123 |
