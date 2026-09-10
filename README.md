@@ -280,3 +280,22 @@ You can sign in immediately using these pre-configured accounts (or click any of
 | Donor | donor@example.com | Password@123 |
 | NGO | contact@hopehair.org | Password@123 |
 | Recipient | recipient@example.com | Password@123 |
+
+
+## Project Structure
+```n HairSync/
+ +-- app.py
+ +-- config.py
+ +-- database/
+ +-- models/
+ +-- routes/
+ +-- static/
+ ¦   +-- css/
+ ¦   +-- js/
+ +-- templates/
+     +-- admin/
+     +-- donor/
+     +-- ngo/
+     +-- recipient/
+     +-- errors/
+```
