@@ -299,3 +299,7 @@ You can sign in immediately using these pre-configured accounts (or click any of
      +-- recipient/
      +-- errors/
 ```
+
+
+---
+> Built with care for cancer patients and alopecia warriors.
