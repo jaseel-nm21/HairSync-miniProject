@@ -1,0 +1,149 @@
+{% extends "base.html" %}
+
+{% block title %}My Wig Requests - HairSync{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <!-- Header -->
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
+        <div>
+            <div class="d-flex align-items-center gap-2 mb-1">
+                <span class="badge badge-role-recipient px-2 py-1 text-uppercase">Fulfillment Ledger</span>
+                <span class="text-muted small">My Wig Requests</span>
+            </div>
+            <h2 class="fw-bold mb-0">Natural-Hair Wig Requests</h2>
+            <p class="text-muted small mb-0">Track the lifecycle of your requests from NGO review to handcrafting and final doorstep delivery.</p>
+        </div>
+        <div>
+            <a href="{{ url_for('recipient.new_request') }}" class="btn btn-hs-primary btn-sm px-3">
+                <i class="bi bi-plus-circle me-1"></i> Submit New Request
+            </a>
+        </div>
+    </div>
+
+    <!-- Status Filter / Summary Cards -->
+    <div class="row g-3 mb-4">
+        <div class="col-sm-6 col-lg-3">
+            <div class="card border-0 shadow-sm rounded-4 p-3 bg-white">
+                <div class="text-muted small fw-semibold">Total Requests</div>
+                <h3 class="fw-bold mb-0">{{ stats.total }}</h3>
+            </div>
+        </div>
+        <div class="col-sm-6 col-lg-3">
+            <div class="card border-0 shadow-sm rounded-4 p-3 bg-white">
+                <div class="text-muted small fw-semibold">Under Review / Verification</div>
+                <h3 class="fw-bold mb-0 text-warning">{{ stats.submitted + stats.under_review }}</h3>
+            </div>
+        </div>
+        <div class="col-sm-6 col-lg-3">
+            <div class="card border-0 shadow-sm rounded-4 p-3 bg-white">
+                <div class="text-muted small fw-semibold">In Preparation / Dispatched</div>
+                <h3 class="fw-bold mb-0 text-info">{{ stats.in_progress + stats.dispatched }}</h3>
+            </div>
+        </div>
+        <div class="col-sm-6 col-lg-3">
+            <div class="card border-0 shadow-sm rounded-4 p-3 bg-white">
+                <div class="text-muted small fw-semibold">Successfully Delivered</div>
+                <h3 class="fw-bold mb-0 text-success">{{ stats.delivered }}</h3>
+            </div>
+        </div>
+    </div>
+
+    <!-- Requests Table / List -->
+    <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
+        <div class="card-header bg-white py-3 px-4 border-bottom d-flex justify-content-between align-items-center">
+            <h5 class="fw-bold mb-0"><i class="bi bi-list-task text-primary me-2"></i> Requests History</h5>
+            <span class="text-muted small">{{ requests|length }} record(s)</span>
+        </div>
+        <div class="card-body p-0">
+            {% if requests %}
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th class="ps-4">ID</th>
+                                <th>Preferred Style</th>
+                                <th>Specs</th>
+                                <th>Assigned Partner NGO</th>
+                                <th>Assigned Wig</th>
+                                <th>Current Status</th>
+                                <th>Submitted On</th>
+                                <th class="text-end pe-4">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for req in requests %}
+                                <tr>
+                                    <td class="ps-4">
+                                        <span class="badge bg-light text-dark border">#{{ req.id }}</span>
+                                    </td>
+                                    <td>
+                                        <strong class="text-dark">{{ req.preferred_wig_type }}</strong>
+                                        <div class="small text-muted">{{ req.hair_source }} Hair</div>
+                                    </td>
+                                    <td class="small">
+                                        <div>Color: <strong class="text-dark">{{ req.preferred_color }}</strong></div>
+                                        <div>Length: <strong class="text-dark">{{ req.preferred_length }} cm</strong> | Size: {{ req.preferred_size }}</div>
+                                    </td>
+                                    <td>
+                                        {% if req.ngo_name %}
+                                            <span class="fw-semibold text-dark"><i class="bi bi-building me-1 text-primary"></i> {{ req.ngo_name }}</span>
+                                        {% else %}
+                                            <span class="text-muted small fst-italic">Pending Assignment</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if req.assigned_wig_name %}
+                                            <span class="badge bg-success-subtle text-success border border-success-subtle">
+                                                <i class="bi bi-check2-circle me-1"></i> {{ req.assigned_wig_name }}
+                                            </span>
+                                        {% else %}
+                                            <span class="text-muted small">Not yet matched</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if req.status == 'Submitted' %}
+                                            <span class="badge bg-secondary-subtle text-secondary border px-2 py-1"><i class="bi bi-send me-1"></i> Submitted</span>
+                                        {% elif req.status == 'Under Review' %}
+                                            <span class="badge bg-warning-subtle text-warning-emphasis border border-warning-subtle px-2 py-1"><i class="bi bi-hourglass me-1"></i> Under Review</span>
+                                        {% elif req.status == 'Approved' %}
+                                            <span class="badge bg-info-subtle text-info-emphasis border border-info-subtle px-2 py-1"><i class="bi bi-hand-thumbs-up me-1"></i> Approved</span>
+                                        {% elif req.status == 'Wig Assigned' %}
+                                            <span class="badge bg-primary-subtle text-primary border border-primary-subtle px-2 py-1"><i class="bi bi-gift me-1"></i> Wig Assigned</span>
+                                        {% elif req.status in ['Preparing', 'Ready for Dispatch'] %}
+                                            <span class="badge bg-primary-subtle text-primary border border-primary-subtle px-2 py-1"><i class="bi bi-scissors me-1"></i> {{ req.status }}</span>
+                                        {% elif req.status in ['Dispatched', 'In Transit', 'Out for Delivery'] %}
+                                            <span class="badge bg-info-subtle text-info-emphasis border border-info-subtle px-2 py-1"><i class="bi bi-truck me-1"></i> {{ req.status }}</span>
+                                        {% elif req.status == 'Delivered' %}
+                                            <span class="badge bg-success-subtle text-success border border-success-subtle px-2 py-1"><i class="bi bi-check-circle-fill me-1"></i> Delivered</span>
+                                        {% elif req.status == 'Rejected' %}
+                                            <span class="badge bg-danger-subtle text-danger border border-danger-subtle px-2 py-1"><i class="bi bi-x-circle me-1"></i> Rejected</span>
+                                        {% endif %}
+                                    </td>
+                                    <td class="small text-muted">{{ req.created_at[:10] }}</td>
+                                    <td class="text-end pe-4">
+                                        <a href="{{ url_for('recipient.track_request', request_id=req.id) }}" class="btn btn-sm btn-hs-primary rounded-pill px-3">
+                                            <i class="bi bi-geo-alt-fill me-1"></i> Track
+                                        </a>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <div class="text-center py-5">
+                    <div class="stat-icon icon-recipient mx-auto mb-3" style="width: 64px; height: 64px; font-size: 1.8rem;">
+                        <i class="bi bi-gift"></i>
+                    </div>
+                    <h5 class="fw-bold mb-1">No Wig Requests Found</h5>
+                    <p class="text-muted small mb-3">You have not submitted any natural-hair wig applications yet.</p>
+                    <a href="{{ url_for('recipient.new_request') }}" class="btn btn-hs-primary rounded-pill px-4">
+                        <i class="bi bi-plus-circle me-1"></i> Submit First Request
+                    </a>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,243 @@
+{% extends "base.html" %}
+
+{% block title %}Track Wig Request #{{ request_item.id }} - HairSync{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <!-- Header -->
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
+        <div>
+            <div class="d-flex align-items-center gap-2 mb-1">
+                <a href="{{ url_for('recipient.requests') }}" class="text-decoration-none text-muted small">
+                    <i class="bi bi-arrow-left me-1"></i> All Requests
+                </a>
+                <span class="text-muted">/</span>
+                <span class="badge badge-role-recipient px-2 py-1 text-uppercase">Tracking #{{ request_item.id }}</span>
+            </div>
+            <h2 class="fw-bold mb-0">Natural-Hair Wig Delivery Tracking</h2>
+            <p class="text-muted small mb-0">Live status progression and fulfillment updates from your partner NGO.</p>
+        </div>
+        <div class="d-flex gap-2">
+            <a href="{{ url_for('recipient.dashboard') }}" class="btn btn-outline-secondary btn-sm rounded-pill px-3">
+                <i class="bi bi-speedometer2 me-1"></i> Dashboard
+            </a>
+        </div>
+    </div>
+
+    <!-- Tracking Summary Card -->
+    <div class="card border-0 shadow-sm rounded-4 overflow-hidden mb-4">
+        <div class="card-header bg-white py-3 px-4 border-bottom d-flex flex-column flex-sm-row justify-content-between align-items-sm-center gap-2">
+            <div class="d-flex align-items-center gap-3">
+                <div class="stat-icon icon-recipient m-0" style="width: 48px; height: 48px; font-size: 1.4rem;">
+                    <i class="bi bi-box2-heart"></i>
+                </div>
+                <div>
+                    <h5 class="fw-bold mb-0">{{ request_item.preferred_wig_type }}</h5>
+                    <small class="text-muted">Requested on {{ request_item.created_at[:10] }} &bull; Hair: 100% Natural</small>
+                </div>
+            </div>
+            <div>
+                {% if request_item.status == 'Submitted' %}
+                    <span class="badge bg-secondary-subtle text-secondary border px-3 py-2 fs-6"><i class="bi bi-send me-1"></i> Submitted</span>
+                {% elif request_item.status == 'Under Review' %}
+                    <span class="badge bg-warning-subtle text-warning-emphasis border border-warning-subtle px-3 py-2 fs-6"><i class="bi bi-hourglass-split me-1"></i> Under Review</span>
+                {% elif request_item.status == 'Approved' %}
+                    <span class="badge bg-info-subtle text-info-emphasis border border-info-subtle px-3 py-2 fs-6"><i class="bi bi-hand-thumbs-up me-1"></i> Approved</span>
+                {% elif request_item.status == 'Wig Assigned' %}
+                    <span class="badge bg-primary-subtle text-primary border border-primary-subtle px-3 py-2 fs-6"><i class="bi bi-gift-fill me-1"></i> Wig Assigned</span>
+                {% elif request_item.status in ['Preparing', 'Ready for Dispatch'] %}
+                    <span class="badge bg-primary-subtle text-primary border border-primary-subtle px-3 py-2 fs-6"><i class="bi bi-scissors me-1"></i> {{ request_item.status }}</span>
+                {% elif request_item.status in ['Dispatched', 'In Transit', 'Out for Delivery'] %}
+                    <span class="badge bg-info-subtle text-info-emphasis border border-info-subtle px-3 py-2 fs-6"><i class="bi bi-truck me-1"></i> {{ request_item.status }}</span>
+                {% elif request_item.status == 'Delivered' %}
+                    <span class="badge bg-success-subtle text-success border border-success-subtle px-3 py-2 fs-6"><i class="bi bi-check-circle-fill me-1"></i> Delivered</span>
+                {% elif request_item.status == 'Rejected' %}
+                    <span class="badge bg-danger-subtle text-danger border border-danger-subtle px-3 py-2 fs-6"><i class="bi bi-x-circle me-1"></i> Rejected</span>
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="card-body p-4 p-md-5">
+            <!-- Progress Stepper (Visual Timeline) -->
+            {% if request_item.status != 'Rejected' %}
+                {% set steps = [
+                    ('Submitted', 'Request Submitted', 'bi-file-earmark-check'),
+                    ('Under Review', 'Medical Review', 'bi-search'),
+                    ('Approved', 'Request Approved', 'bi-patch-check'),
+                    ('Wig Assigned', 'Wig Matched', 'bi-scissors'),
+                    ('Preparing', 'Preparation', 'bi-gear'),
+                    ('Ready for Dispatch', 'Ready to Ship', 'bi-box-seam'),
+                    ('Dispatched', 'Dispatched', 'bi-truck'),
+                    ('In Transit', 'In Transit', 'bi-geo-alt'),
+                    ('Out for Delivery', 'Out for Delivery', 'bi-bicycle'),
+                    ('Delivered', 'Delivered', 'bi-house-check')
+                ] %}
+
+                {% set current_idx = -1 %}
+                {% for s in status_sequence %}
+                    {% if s == request_item.status %}
+                        {% set current_idx = loop.index0 %}
+                    {% endif %}
+                {% endfor %}
+
+                <div class="tracking-stepper-container mb-5">
+                    <div class="tracking-stepper">
+                        {% for step_code, step_label, step_icon in steps %}
+                            {% set step_idx = loop.index0 %}
+                            {% set is_completed = (step_idx < current_idx) or (request_item.status == 'Delivered') %}
+                            {% set is_current = (step_idx == current_idx) and (request_item.status != 'Delivered') %}
+                            
+                            <div class="stepper-step {% if is_completed %}completed{% elif is_current %}active{% else %}pending{% endif %}">
+                                <div class="step-circle">
+                                    {% if is_completed %}
+                                        <i class="bi bi-check-lg"></i>
+                                    {% else %}
+                                        <i class="bi {{ step_icon }}"></i>
+                                    {% endif %}
+                                </div>
+                                <div class="step-content">
+                                    <div class="step-title">{{ step_label }}</div>
+                                    <small class="step-status">
+                                        {% if is_completed %}Completed{% elif is_current %}In Progress{% else %}Upcoming{% endif %}
+                                    </small>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            {% else %}
+                <div class="alert alert-danger p-4 rounded-4 mb-4">
+                    <div class="d-flex align-items-center gap-3">
+                        <i class="bi bi-exclamation-triangle-fill fs-2 text-danger"></i>
+                        <div>
+                            <h5 class="fw-bold mb-1">Request Could Not Be Approved</h5>
+                            <p class="mb-0">{{ request_item.rejection_reason or 'Criteria did not match or current organization capacity reached.' }}</p>
+                        </div>
+                    </div>
+                </div>
+            {% endif %}
+
+            <!-- Courier / Dispatch Tracking Info Banner (If Dispatched or Delivered) -->
+            {% if request_item.tracking_number or request_item.courier_service %}
+                <div class="p-3 mb-4 rounded-3 border bg-light d-flex flex-column flex-sm-row justify-content-between align-items-sm-center gap-3">
+                    <div>
+                        <span class="text-muted small text-uppercase fw-semibold">Courier &amp; Tracking Details</span>
+                        <h6 class="fw-bold mb-0 text-dark">
+                            <i class="bi bi-upc-scan text-primary me-2"></i>
+                            {{ request_item.courier_service or 'Courier Partner' }}: 
+                            <span class="text-primary font-monospace">{{ request_item.tracking_number or 'In Transit' }}</span>
+                        </h6>
+                    </div>
+                    {% if request_item.estimated_delivery_date %}
+                        <div class="text-sm-end">
+                            <span class="text-muted small">Estimated Delivery:</span>
+                            <div class="fw-bold text-success">{{ request_item.estimated_delivery_date }}</div>
+                        </div>
+                    {% endif %}
+                </div>
+            {% endif %}
+
+            <div class="row g-4">
+                <!-- Left: Chronological Activity Log -->
+                <div class="col-lg-7">
+                    <h6 class="fw-bold text-dark mb-3 pb-2 border-bottom">
+                        <i class="bi bi-clock-history text-primary me-2"></i> Timeline &amp; Status Updates
+                    </h6>
+                    
+                    <div class="timeline-log">
+                        {% for log in timeline %}
+                            <div class="timeline-log-item">
+                                <div class="timeline-marker"></div>
+                                <div class="timeline-content p-3 bg-light rounded-3 border">
+                                    <div class="d-flex justify-content-between align-items-center mb-1">
+                                        <strong class="text-dark">{{ log.status }}</strong>
+                                        <small class="text-muted">{{ log.created_at }}</small>
+                                    </div>
+                                    {% if log.remarks %}
+                                        <p class="text-muted small mb-1">{{ log.remarks }}</p>
+                                    {% endif %}
+                                    <div class="text-muted" style="font-size: 0.75rem;">
+                                        Updated by: <span class="fw-semibold">{{ log.updater_name or 'System Coordinator' }}</span> ({{ log.updater_role or 'HairSync' }})
+                                    </div>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                </div>
+
+                <!-- Right: Matched Wig & Delivery Info -->
+                <div class="col-lg-5">
+                    <!-- Matched Wig Specs -->
+                    <div class="card border rounded-3 mb-4 shadow-xs">
+                        <div class="card-header bg-white py-2 px-3 fw-bold small text-uppercase">
+                            <i class="bi bi-scissors text-secondary me-2"></i> Matched Wig Details
+                        </div>
+                        <div class="card-body p-3 small">
+                            {% if request_item.assigned_wig_name %}
+                                <div class="p-2 mb-3 bg-success-subtle text-success-emphasis rounded-2 fw-semibold d-flex align-items-center gap-2">
+                                    <i class="bi bi-check-circle-fill"></i> Wig Assigned &amp; Reserved
+                                </div>
+                                <table class="table table-sm table-borderless mb-0">
+                                    <tr>
+                                        <td class="text-muted">Style Name:</td>
+                                        <td class="fw-bold text-dark">{{ request_item.assigned_wig_name }}</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="text-muted">Hair Source:</td>
+                                        <td class="fw-bold text-success">{{ request_item.assigned_wig_source }} Human Hair</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="text-muted">Color:</td>
+                                        <td class="fw-semibold">{{ request_item.assigned_wig_color }}</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="text-muted">Length:</td>
+                                        <td class="fw-semibold">{{ request_item.assigned_wig_length }} cm</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="text-muted">Cap Size:</td>
+                                        <td class="fw-semibold">{{ request_item.assigned_wig_size }}</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="text-muted">Condition:</td>
+                                        <td class="fw-semibold">{{ request_item.assigned_wig_condition }}</td>
+                                    </tr>
+                                </table>
+                            {% else %}
+                                <div class="text-center py-3 text-muted">
+                                    <i class="bi bi-hourglass-split fs-4 d-block mb-1 text-warning"></i>
+                                    Wig matching is currently in progress by our partner NGO.
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <!-- Fulfilling Organization & Destination -->
+                    <div class="card border rounded-3 shadow-xs">
+                        <div class="card-header bg-white py-2 px-3 fw-bold small text-uppercase">
+                            <i class="bi bi-building text-primary me-2"></i> Organization &amp; Destination
+                        </div>
+                        <div class="card-body p-3 small">
+                            <div class="mb-3">
+                                <span class="text-muted d-block">Partner NGO:</span>
+                                <strong class="text-dark fs-6">{{ request_item.ngo_name or 'Pending Assignment' }}</strong>
+                                {% if request_item.ngo_phone %}
+                                    <div class="text-muted"><i class="bi bi-telephone me-1"></i> {{ request_item.ngo_phone }}</div>
+                                {% endif %}
+                            </div>
+
+                            <div class="border-top pt-2">
+                                <span class="text-muted d-block">Delivery Address:</span>
+                                <strong class="text-dark">{{ request_item.recipient_name }}</strong>
+                                <div class="text-muted">{{ request_item.delivery_address }}, {{ request_item.delivery_city }}</div>
+                                <div class="text-muted">{{ request_item.delivery_district }} - {{ request_item.delivery_pincode }}</div>
+                                <div class="text-muted"><i class="bi bi-telephone me-1"></i> {{ request_item.contact_phone }}</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

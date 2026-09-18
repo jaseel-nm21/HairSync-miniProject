@@ -1,0 +1,159 @@
+{% extends "base.html" %}
+
+{% block title %}Request a Free Natural-Hair Wig - HairSync{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-9">
+            <!-- Header -->
+            <div class="d-flex align-items-center justify-content-between mb-4">
+                <div>
+                    <div class="d-flex align-items-center gap-2 mb-1">
+                        <span class="badge badge-role-recipient px-2 py-1 text-uppercase">Medical Allocation</span>
+                        <span class="badge bg-success-subtle text-success border border-success-subtle">100% Natural Hair</span>
+                    </div>
+                    <h2 class="fw-bold mb-0">Request a Natural-Hair Wig</h2>
+                    <p class="text-muted small mb-0">Every wig is handcrafted by verified NGOs from sanitized donor hair for survivors and patients in need.</p>
+                </div>
+                <a href="{{ url_for('recipient.dashboard') }}" class="btn btn-outline-secondary btn-sm rounded-pill px-3">
+                    <i class="bi bi-arrow-left me-1"></i> Back
+                </a>
+            </div>
+
+            <div class="card border-0 shadow-sm rounded-4 overflow-hidden mb-4">
+                <div class="card-header bg-white py-3 px-4 border-bottom">
+                    <h5 class="fw-bold mb-0"><i class="bi bi-file-earmark-text text-primary me-2"></i> Wig Specifications &amp; Delivery Details</h5>
+                </div>
+                <div class="card-body p-4 p-md-5">
+                    <form method="POST" action="{{ url_for('recipient.new_request') }}" id="wigRequestForm">
+                        <!-- Section 1: Wig Preferences -->
+                        <h6 class="fw-bold text-dark mb-3 pb-2 border-bottom">
+                            <i class="bi bi-scissors text-secondary me-2"></i> 1. Desired Wig Specifications
+                        </h6>
+                        <div class="row g-3 mb-4">
+                            <div class="col-md-6">
+                                <label for="preferred_wig_type" class="form-label fw-semibold">Preferred Wig Style / Cut <span class="text-danger">*</span></label>
+                                <select class="form-select" id="preferred_wig_type" name="preferred_wig_type" required>
+                                    <option value="" disabled selected>Select style...</option>
+                                    <option value="Medium Wavy Crown">Medium Wavy Crown</option>
+                                    <option value="Short Classic Bob">Short Classic Bob</option>
+                                    <option value="Long Straight Elegance">Long Straight Elegance</option>
+                                    <option value="Shoulder-Length Layers">Shoulder-Length Layers</option>
+                                    <option value="Pixie Cut (Short)">Pixie Cut (Short)</option>
+                                    <option value="Custom / Any Suitable Style">Custom / Any Suitable Style</option>
+                                </select>
+                                <small class="text-muted">Choose the style closest to what feels natural and comfortable for you.</small>
+                            </div>
+
+                            <div class="col-md-6">
+                                <label for="preferred_color" class="form-label fw-semibold">Preferred Hair Color <span class="text-danger">*</span></label>
+                                <select class="form-select" id="preferred_color" name="preferred_color" required>
+                                    <option value="" disabled selected>Select color...</option>
+                                    <option value="Natural Jet Black">Natural Jet Black</option>
+                                    <option value="Natural Dark Brown">Natural Dark Brown</option>
+                                    <option value="Medium Chestnut Brown">Medium Chestnut Brown</option>
+                                    <option value="Mixed Gray / Salt & Pepper">Mixed Gray / Salt &amp; Pepper</option>
+                                    <option value="Any Natural Shade">Any Natural Shade</option>
+                                </select>
+                            </div>
+
+                            <div class="col-md-4">
+                                <label for="preferred_length" class="form-label fw-semibold">Approx. Hair Length (cm) <span class="text-danger">*</span></label>
+                                <input type="number" step="0.5" min="15" max="60" class="form-control" id="preferred_length" name="preferred_length" value="30.0" required>
+                                <small class="text-muted">E.g., 20 cm (short), 30 cm (medium), 40 cm (long).</small>
+                            </div>
+
+                            <div class="col-md-4">
+                                <label for="preferred_size" class="form-label fw-semibold">Cap Size <span class="text-danger">*</span></label>
+                                <select class="form-select" id="preferred_size" name="preferred_size" required>
+                                    <option value="Small">Small (Pediatric / Petite 52-54 cm)</option>
+                                    <option value="Medium" selected>Medium (Standard Adult 54-57 cm)</option>
+                                    <option value="Large">Large (57-60 cm)</option>
+                                    <option value="Adjustable">Adjustable Elastic Mesh</option>
+                                </select>
+                            </div>
+
+                            <div class="col-md-4">
+                                <label for="ngo_id" class="form-label fw-semibold">Preferred Partner NGO</label>
+                                <select class="form-select" id="ngo_id" name="ngo_id">
+                                    <option value="">Any Verified Partner NGO</option>
+                                    {% for ngo in ngos %}
+                                        <option value="{{ ngo.id }}">{{ ngo.organization_name }} ({{ ngo.district }})</option>
+                                    {% endfor %}
+                                </select>
+                                <small class="text-muted">You may select a local NGO or leave open.</small>
+                            </div>
+                        </div>
+
+                        <!-- Section 2: Medical / Personal Reason -->
+                        <h6 class="fw-bold text-dark mb-3 pb-2 border-bottom">
+                            <i class="bi bi-heart-pulse text-danger me-2"></i> 2. Reason for Request &amp; Medical Context
+                        </h6>
+                        <div class="row g-3 mb-4">
+                            <div class="col-12">
+                                <label for="reason_for_request" class="form-label fw-semibold">Reason for Request <span class="text-danger">*</span></label>
+                                <textarea class="form-control" id="reason_for_request" name="reason_for_request" rows="3" required placeholder="Please describe your health or hair loss circumstances (e.g., undergoing chemotherapy for cancer, alopecia areata, cranial surgery recovery, burn trauma).">{{ profile.reason_for_wig if profile else '' }}</textarea>
+                                <small class="text-muted">This helps our partner NGOs prioritize urgent medical allocations.</small>
+                            </div>
+                            <div class="col-12">
+                                <label for="additional_notes" class="form-label fw-semibold">Additional Preferences or Scalp Sensitivity Notes</label>
+                                <textarea class="form-control" id="additional_notes" name="additional_notes" rows="2" placeholder="E.g., sensitive scalp, prefer extra soft inner lining, need breathable cap for warm climate."></textarea>
+                            </div>
+                        </div>
+
+                        <!-- Section 3: Delivery Address -->
+                        <h6 class="fw-bold text-dark mb-3 pb-2 border-bottom">
+                            <i class="bi bi-geo-alt-fill text-primary me-2"></i> 3. Delivery &amp; Contact Details
+                        </h6>
+                        <div class="row g-3 mb-4">
+                            <div class="col-md-6">
+                                <label for="contact_phone" class="form-label fw-semibold">Recipient Contact Phone <span class="text-danger">*</span></label>
+                                <input type="tel" class="form-control" id="contact_phone" name="contact_phone" value="{{ profile.phone if profile else '' }}" required placeholder="+91 9876543210">
+                                <small class="text-muted">Used by courier and NGO for delivery dispatch updates.</small>
+                            </div>
+
+                            <div class="col-md-6">
+                                <label for="delivery_district" class="form-label fw-semibold">District <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" id="delivery_district" name="delivery_district" value="{{ profile.district if profile else '' }}" required placeholder="e.g. Ernakulam, Thiruvananthapuram">
+                            </div>
+
+                            <div class="col-md-8">
+                                <label for="delivery_address" class="form-label fw-semibold">Complete Street Address <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" id="delivery_address" name="delivery_address" value="{{ profile.address if profile else '' }}" required placeholder="House / Flat No, Street, Landmark">
+                            </div>
+
+                            <div class="col-md-4">
+                                <label for="delivery_city" class="form-label fw-semibold">City / Town <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" id="delivery_city" name="delivery_city" value="{{ profile.district if profile else '' }}" required placeholder="City or Town">
+                            </div>
+
+                            <div class="col-md-4">
+                                <label for="delivery_pincode" class="form-label fw-semibold">Pincode (6 digits) <span class="text-danger">*</span></label>
+                                <input type="text" maxlength="6" pattern="[0-9]{6}" class="form-control" id="delivery_pincode" name="delivery_pincode" required placeholder="682001">
+                            </div>
+                        </div>
+
+                        <div class="p-3 bg-light rounded-3 small border mb-4">
+                            <div class="d-flex align-items-start gap-2">
+                                <i class="bi bi-shield-lock-fill text-success fs-5"></i>
+                                <div>
+                                    <strong class="text-dark">100% Free Humanitarian Initiative:</strong>
+                                    <p class="text-muted mb-0">HairSync and its participating NGO partners never charge recipients for natural-hair wigs or shipping. All donations and materials are funded through community goodwill.</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="d-flex justify-content-end gap-2">
+                            <a href="{{ url_for('recipient.dashboard') }}" class="btn btn-outline-secondary px-4">Cancel</a>
+                            <button type="submit" class="btn btn-hs-primary px-5 fw-semibold" id="submitWigRequestBtn">
+                                <i class="bi bi-send-fill me-2"></i> Submit Wig Request
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
