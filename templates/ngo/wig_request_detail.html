@@ -1,0 +1,357 @@
+{% extends "base.html" %}
+
+{% block title %}Manage Wig Request #{{ request_item.id }} - {{ profile.organization_name }} - HairSync{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <!-- Header -->
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
+        <div>
+            <div class="d-flex align-items-center gap-2 mb-1">
+                <a href="{{ url_for('ngo.wig_requests') }}" class="text-decoration-none text-muted small">
+                    <i class="bi bi-arrow-left me-1"></i> Requests Queue
+                </a>
+                <span class="text-muted">/</span>
+                <span class="badge badge-role-ngo px-2 py-1 text-uppercase">Request #{{ request_item.id }}</span>
+            </div>
+            <h2 class="fw-bold mb-0">Fulfillment &amp; Wig Assignment</h2>
+            <p class="text-muted small mb-0">Review recipient medical context, allocate handcrafted wig, and update shipping progress.</p>
+        </div>
+        <div class="d-flex gap-2">
+            <a href="{{ url_for('ngo.wig_requests') }}" class="btn btn-outline-secondary btn-sm rounded-pill px-3">
+                <i class="bi bi-list-task me-1"></i> Back to Queue
+            </a>
+        </div>
+    </div>
+
+    <!-- Status Banner -->
+    <div class="card border-0 shadow-sm rounded-4 overflow-hidden mb-4 bg-white">
+        <div class="p-4 d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 border-bottom">
+            <div class="d-flex align-items-center gap-3">
+                <div class="stat-icon icon-recipient m-0" style="width: 52px; height: 52px; font-size: 1.6rem;">
+                    <i class="bi bi-gift-fill"></i>
+                </div>
+                <div>
+                    <h5 class="fw-bold mb-0">{{ request_item.recipient_name }} &bull; {{ request_item.preferred_wig_type }}</h5>
+                    <small class="text-muted">Application submitted on {{ request_item.created_at[:10] }} &bull; Phone: {{ request_item.contact_phone }}</small>
+                </div>
+            </div>
+            <div>
+                <span class="text-muted small d-block mb-1 text-md-end">Current Status:</span>
+                {% if request_item.status == 'Submitted' %}
+                    <span class="badge bg-secondary-subtle text-secondary border px-3 py-2 fs-6"><i class="bi bi-send me-1"></i> Submitted (New)</span>
+                {% elif request_item.status == 'Under Review' %}
+                    <span class="badge bg-warning-subtle text-warning-emphasis border border-warning-subtle px-3 py-2 fs-6"><i class="bi bi-hourglass me-1"></i> Under Review</span>
+                {% elif request_item.status == 'Approved' %}
+                    <span class="badge bg-info-subtle text-info-emphasis border border-info-subtle px-3 py-2 fs-6"><i class="bi bi-hand-thumbs-up me-1"></i> Approved</span>
+                {% elif request_item.status == 'Wig Assigned' %}
+                    <span class="badge bg-primary-subtle text-primary border border-primary-subtle px-3 py-2 fs-6"><i class="bi bi-gift me-1"></i> Wig Assigned</span>
+                {% elif request_item.status in ['Preparing', 'Ready for Dispatch'] %}
+                    <span class="badge bg-primary-subtle text-primary border border-primary-subtle px-3 py-2 fs-6"><i class="bi bi-scissors me-1"></i> {{ request_item.status }}</span>
+                {% elif request_item.status in ['Dispatched', 'In Transit', 'Out for Delivery'] %}
+                    <span class="badge bg-info-subtle text-info-emphasis border border-info-subtle px-3 py-2 fs-6"><i class="bi bi-truck me-1"></i> {{ request_item.status }}</span>
+                {% elif request_item.status == 'Delivered' %}
+                    <span class="badge bg-success-subtle text-success border border-success-subtle px-3 py-2 fs-6"><i class="bi bi-check-circle-fill me-1"></i> Delivered</span>
+                {% elif request_item.status == 'Rejected' %}
+                    <span class="badge bg-danger-subtle text-danger border border-danger-subtle px-3 py-2 fs-6"><i class="bi bi-x-circle me-1"></i> Rejected</span>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Action Controls Toolbars -->
+        <div class="p-3 bg-light d-flex flex-wrap align-items-center gap-2">
+            {% if request_item.status == 'Submitted' %}
+                <form method="POST" action="{{ url_for('ngo.review_wig_request', request_id=request_item.id) }}">
+                    <button type="submit" class="btn btn-sm btn-warning text-dark fw-semibold rounded-pill px-3">
+                        <i class="bi bi-search me-1"></i> Claim &amp; Mark Under Review
+                    </button>
+                </form>
+            {% endif %}
+
+            {% if request_item.status in ['Submitted', 'Under Review'] %}
+                <form method="POST" action="{{ url_for('ngo.approve_wig_request', request_id=request_item.id) }}">
+                    <button type="submit" class="btn btn-sm btn-success fw-semibold rounded-pill px-3">
+                        <i class="bi bi-check2-circle me-1"></i> Approve Request
+                    </button>
+                </form>
+
+                <button class="btn btn-sm btn-outline-danger rounded-pill px-3" data-bs-toggle="modal" data-bs-target="#rejectModal">
+                    <i class="bi bi-x-circle me-1"></i> Reject Request
+                </button>
+            {% endif %}
+
+            {% if request_item.status in ['Approved', 'Wig Assigned', 'Preparing', 'Ready for Dispatch', 'Dispatched', 'In Transit', 'Out for Delivery'] %}
+                {% if not request_item.assigned_wig_id %}
+                    <button class="btn btn-sm btn-hs-primary rounded-pill px-3" data-bs-toggle="modal" data-bs-target="#assignWigModal">
+                        <i class="bi bi-scissors me-1"></i> Match &amp; Assign Wig
+                    </button>
+                {% else %}
+                    <button class="btn btn-sm btn-outline-primary rounded-pill px-3" data-bs-toggle="modal" data-bs-target="#assignWigModal">
+                        <i class="bi bi-arrow-repeat me-1"></i> Reassign Wig
+                    </button>
+                {% endif %}
+
+                <button class="btn btn-sm btn-primary rounded-pill px-3" data-bs-toggle="modal" data-bs-target="#updateStatusModal">
+                    <i class="bi bi-truck me-1"></i> Update Fulfillment / Dispatch
+                </button>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <!-- Left: Specifications & Assigned Wig -->
+        <div class="col-lg-6">
+            <!-- Recipient Medical Context -->
+            <div class="card border-0 shadow-sm rounded-4 mb-4">
+                <div class="card-header bg-white py-3 px-4 border-bottom">
+                    <h5 class="fw-bold mb-0"><i class="bi bi-heart-pulse text-danger me-2"></i> Medical &amp; Personal Need</h5>
+                </div>
+                <div class="card-body p-4">
+                    <div class="p-3 bg-danger-subtle rounded-3 border border-danger-subtle mb-3">
+                        <strong class="text-danger-emphasis d-block mb-1">Reason for Request:</strong>
+                        <p class="text-dark mb-0">{{ request_item.reason_for_request }}</p>
+                    </div>
+
+                    {% if request_item.additional_notes %}
+                        <div class="p-3 bg-light rounded-3 border mb-3 small">
+                            <strong class="text-dark d-block mb-1">Scalp &amp; Styling Preferences:</strong>
+                            <p class="text-muted mb-0">{{ request_item.additional_notes }}</p>
+                        </div>
+                    {% endif %}
+
+                    <table class="table table-sm table-borderless small mb-0">
+                        <tr>
+                            <td class="text-muted">Recipient Name:</td>
+                            <td class="fw-bold text-dark">{{ request_item.recipient_name }}</td>
+                        </tr>
+                        <tr>
+                            <td class="text-muted">Date of Birth:</td>
+                            <td class="fw-semibold">{{ request_item.date_of_birth or 'Not specified' }}</td>
+                        </tr>
+                        <tr>
+                            <td class="text-muted">Contact Phone:</td>
+                            <td class="fw-semibold">{{ request_item.contact_phone }}</td>
+                        </tr>
+                        <tr>
+                            <td class="text-muted">Registered Email:</td>
+                            <td class="fw-semibold">{{ request_item.recipient_email }}</td>
+                        </tr>
+                        <tr>
+                            <td class="text-muted">Delivery Address:</td>
+                            <td class="fw-semibold">{{ request_item.delivery_address }}, {{ request_item.delivery_city }}, {{ request_item.delivery_district }} - {{ request_item.delivery_pincode }}</td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Desired Specifications vs Assigned Wig -->
+            <div class="card border-0 shadow-sm rounded-4 mb-4">
+                <div class="card-header bg-white py-3 px-4 border-bottom">
+                    <h5 class="fw-bold mb-0"><i class="bi bi-scissors text-primary me-2"></i> Wig Matching &amp; Allocation</h5>
+                </div>
+                <div class="card-body p-4">
+                    <div class="row g-3">
+                        <div class="col-sm-6">
+                            <div class="p-3 bg-light rounded-3 border h-100">
+                                <span class="text-muted small text-uppercase fw-semibold d-block mb-2">Requested Specs</span>
+                                <ul class="list-unstyled small mb-0">
+                                    <li class="mb-1">Style: <strong class="text-dark">{{ request_item.preferred_wig_type }}</strong></li>
+                                    <li class="mb-1">Color: <strong class="text-dark">{{ request_item.preferred_color }}</strong></li>
+                                    <li class="mb-1">Length: <strong class="text-dark">{{ request_item.preferred_length }} cm</strong></li>
+                                    <li class="mb-1">Cap Size: <strong class="text-dark">{{ request_item.preferred_size }}</strong></li>
+                                    <li>Hair: <span class="badge bg-success-subtle text-success">100% Natural</span></li>
+                                </ul>
+                            </div>
+                        </div>
+
+                        <div class="col-sm-6">
+                            <div class="p-3 rounded-3 border h-100 {% if request_item.assigned_wig_id %}bg-success-subtle border-success-subtle{% else %}bg-light{% endif %}">
+                                <span class="text-muted small text-uppercase fw-semibold d-block mb-2">Matched Inventory Wig</span>
+                                {% if request_item.assigned_wig_id %}
+                                    <ul class="list-unstyled small mb-0">
+                                        <li class="mb-1">Wig ID: <strong class="text-dark">#{{ request_item.assigned_wig_id }}</strong></li>
+                                        <li class="mb-1">Style: <strong class="text-dark">{{ request_item.assigned_wig_name }}</strong></li>
+                                        <li class="mb-1">Color: <strong class="text-dark">{{ request_item.assigned_wig_color }}</strong></li>
+                                        <li class="mb-1">Length: <strong class="text-dark">{{ request_item.assigned_wig_length }} cm</strong></li>
+                                        <li class="mb-1">Cap Size: <strong class="text-dark">{{ request_item.assigned_wig_size }}</strong></li>
+                                        <li>Status: <span class="badge bg-success text-white">Assigned</span></li>
+                                    </ul>
+                                {% else %}
+                                    <div class="text-center py-3 text-muted">
+                                        <i class="bi bi-scissors fs-4 d-block mb-1"></i>
+                                        No wig matched yet.
+                                        <button class="btn btn-sm btn-hs-primary mt-2 rounded-pill" data-bs-toggle="modal" data-bs-target="#assignWigModal">
+                                            Match from Stock
+                                        </button>
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right: Activity Logs & Timeline -->
+        <div class="col-lg-6">
+            <div class="card border-0 shadow-sm rounded-4 mb-4">
+                <div class="card-header bg-white py-3 px-4 border-bottom">
+                    <h5 class="fw-bold mb-0"><i class="bi bi-clock-history text-primary me-2"></i> Status Tracking History</h5>
+                </div>
+                <div class="card-body p-4">
+                    <div class="timeline-log">
+                        {% for log in timeline %}
+                            <div class="timeline-log-item">
+                                <div class="timeline-marker"></div>
+                                <div class="timeline-content p-3 bg-light rounded-3 border">
+                                    <div class="d-flex justify-content-between align-items-center mb-1">
+                                        <strong class="text-dark">{{ log.status }}</strong>
+                                        <small class="text-muted">{{ log.created_at }}</small>
+                                    </div>
+                                    {% if log.remarks %}
+                                        <p class="text-muted small mb-1">{{ log.remarks }}</p>
+                                    {% endif %}
+                                    <div class="text-muted" style="font-size: 0.75rem;">
+                                        Updated by: <span class="fw-semibold">{{ log.updater_name or 'Coordinator' }}</span>
+                                    </div>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal: Reject Request -->
+<div class="modal fade" id="rejectModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow rounded-4">
+            <div class="modal-header border-bottom py-3 px-4">
+                <h5 class="modal-title fw-bold text-danger"><i class="bi bi-x-circle me-2"></i> Reject Request #{{ request_item.id }}</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form method="POST" action="{{ url_for('ngo.reject_wig_request', request_id=request_item.id) }}">
+                <div class="modal-body p-4">
+                    <p class="small text-muted mb-3">Please provide a clear, professional reason for rejection. This will be visible to the recipient.</p>
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Rejection Reason <span class="text-danger">*</span></label>
+                        <textarea class="form-control" name="rejection_reason" rows="3" required placeholder="e.g. Current monthly allocation exhausted; outside district jurisdiction; duplicate application..."></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer border-top py-3 px-4">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-danger px-4 fw-semibold">Confirm Rejection</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Modal: Match & Assign Wig -->
+<div class="modal fade" id="assignWigModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content border-0 shadow rounded-4">
+            <div class="modal-header border-bottom py-3 px-4">
+                <h5 class="modal-title fw-bold"><i class="bi bi-scissors text-primary me-2"></i> Match &amp; Assign Wig from Stock</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form method="POST" action="{{ url_for('ngo.assign_wig_to_request', request_id=request_item.id) }}">
+                <div class="modal-body p-4">
+                    <div class="p-3 bg-light rounded-3 border mb-3 small">
+                        <strong>Requested Specs:</strong> {{ request_item.preferred_wig_type }} &bull; {{ request_item.preferred_color }} &bull; {{ request_item.preferred_length }} cm &bull; Size: {{ request_item.preferred_size }}
+                    </div>
+
+                    {% if available_wigs %}
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">Select an Available Wig from Your Catalog <span class="text-danger">*</span></label>
+                            <div class="d-flex flex-column gap-2" style="max-height: 280px; overflow-y: auto;">
+                                {% for w in available_wigs %}
+                                    <label class="p-3 border rounded-3 d-flex align-items-center gap-3 cursor-pointer hover-shadow transition">
+                                        <input type="radio" name="wig_id" value="{{ w.id }}" class="form-check-input mt-0" required {% if loop.first %}checked{% endif %}>
+                                        <div class="flex-grow-1">
+                                            <div class="d-flex justify-content-between align-items-center">
+                                                <strong class="text-dark">#{{ w.id }} &bull; {{ w.wig_type }}</strong>
+                                                <span class="badge bg-success-subtle text-success border border-success-subtle">{{ w.hair_source }} Hair</span>
+                                            </div>
+                                            <div class="small text-muted">
+                                                Color: {{ w.hair_color }} &bull; Length: {{ w.hair_length }} cm &bull; Cap Size: {{ w.size }}
+                                            </div>
+                                        </div>
+                                    </label>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    {% else %}
+                        <div class="alert alert-warning py-3 small">
+                            <i class="bi bi-exclamation-triangle me-1"></i> No wigs currently marked as 'Available' in your stock.
+                            Please <a href="{{ url_for('ngo.wig_inventory') }}" class="fw-bold">add or craft wigs in inventory</a> first.
+                        </div>
+                    {% endif %}
+
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Assignment Notes / Remarks</label>
+                        <input type="text" class="form-control" name="remarks" placeholder="e.g. Matched closest color and length; scheduled for final sanitization.">
+                    </div>
+                </div>
+                <div class="modal-footer border-top py-3 px-4">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-hs-primary px-4 fw-semibold" {% if not available_wigs %}disabled{% endif %}>Assign Selected Wig</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Modal: Advance Status & Dispatch -->
+<div class="modal fade" id="updateStatusModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow rounded-4">
+            <div class="modal-header border-bottom py-3 px-4">
+                <h5 class="modal-title fw-bold"><i class="bi bi-truck text-primary me-2"></i> Update Fulfillment / Dispatch Status</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form method="POST" action="{{ url_for('ngo.update_wig_request_status', request_id=request_item.id) }}">
+                <div class="modal-body p-4">
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Target Status <span class="text-danger">*</span></label>
+                        <select class="form-select" name="status" required>
+                            <option value="Preparing" {% if request_item.status == 'Preparing' %}selected{% endif %}>Preparing (Wig crafting / Sanitizing)</option>
+                            <option value="Ready for Dispatch" {% if request_item.status == 'Ready for Dispatch' %}selected{% endif %}>Ready for Dispatch (Packaged)</option>
+                            <option value="Dispatched" {% if request_item.status == 'Dispatched' %}selected{% endif %}>Dispatched (Handed to Courier)</option>
+                            <option value="In Transit" {% if request_item.status == 'In Transit' %}selected{% endif %}>In Transit (On the way)</option>
+                            <option value="Out for Delivery" {% if request_item.status == 'Out for Delivery' %}selected{% endif %}>Out for Delivery</option>
+                            <option value="Delivered" {% if request_item.status == 'Delivered' %}selected{% endif %}>Delivered (Fulfillment Complete)</option>
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Courier / Delivery Service</label>
+                        <input type="text" class="form-control" name="courier_service" value="{{ request_item.courier_service or '' }}" placeholder="e.g. India Post Speed Post, Blue Dart, Volunteer Delivery">
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Tracking Number / Consignment ID</label>
+                        <input type="text" class="form-control" name="tracking_number" value="{{ request_item.tracking_number or '' }}" placeholder="e.g. EK983214562IN">
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Estimated Delivery Date</label>
+                        <input type="date" class="form-control" name="estimated_delivery_date" value="{{ request_item.estimated_delivery_date or '' }}">
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Status Update Remarks</label>
+                        <textarea class="form-control" name="remarks" rows="2" placeholder="e.g. Package dispatched via registered courier; expected arrival in 3 days."></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer border-top py-3 px-4">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-hs-primary px-4 fw-semibold">Save Status &amp; Notify</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

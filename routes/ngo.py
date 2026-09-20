@@ -14,6 +14,8 @@ from models.donation_center import DonationCenter
 from models.donation_guideline import DonationGuideline
 from models.appointment import Appointment
 from models.donation import Donation
+from models.inventory import HairInventory, Wig
+from models.wig_request import WigRequest
 
 ngo_bp = Blueprint('ngo', __name__, url_prefix='/ngo')
 
@@ -150,6 +152,18 @@ def dashboard():
     }
     recent_appointments = Appointment.get_by_ngo(profile['id'])[:5] if (profile and is_approved) else []
 
+    # Module 4 & 5 metrics: inventory & wig requests
+    hair_stats = HairInventory.count_by_ngo(profile['id']) if profile else {
+        'total_items': 0, 'in_stock': 0, 'in_processing': 0, 'used_in_wig': 0
+    }
+    wig_stats = Wig.count_by_ngo(profile['id']) if profile else {
+        'total_wigs': 0, 'available': 0, 'assigned': 0, 'in_transit': 0, 'delivered': 0
+    }
+    wig_request_stats = WigRequest.count_by_ngo(profile['id']) if profile else {
+        'total': 0, 'under_review': 0, 'approved': 0, 'assigned': 0, 'preparing': 0, 'dispatched': 0, 'delivered': 0
+    }
+    recent_wig_requests = WigRequest.get_by_ngo(profile['id'])[:5] if (profile and is_approved) else []
+
     return render_template(
         'ngo/dashboard.html',
         user=user,
@@ -159,7 +173,11 @@ def dashboard():
         recent_centers=recent_centers,
         appointment_counts=appointment_counts,
         donation_counts=donation_counts,
-        recent_appointments=recent_appointments
+        recent_appointments=recent_appointments,
+        hair_stats=hair_stats,
+        wig_stats=wig_stats,
+        wig_request_stats=wig_request_stats,
+        recent_wig_requests=recent_wig_requests
     )
 
 
@@ -633,7 +651,7 @@ def complete_appointment(appointment_id):
             return render_template('ngo/complete_donation.html', appointment=appt, profile=profile_data)
 
         # Create permanent donation record
-        Donation.create(
+        don_id = Donation.create(
             donor_id=appt['donor_id'],
             ngo_id=profile_data['id'],
             donation_center_id=appt['donation_center_id'],
@@ -646,6 +664,12 @@ def complete_appointment(appointment_id):
             notes=notes if notes else None,
             status='Completed'
         )
+
+        # Automatically catalog fulfilled donation into NGO hair inventory
+        try:
+            HairInventory.auto_add_from_donation(don_id)
+        except Exception as inv_err:
+            pass
 
         # Mark appointment status as 'Completed'
         Appointment.update_status(
@@ -686,5 +710,466 @@ def donations():
         stats=stats,
         profile=profile_data
     )
+
+
+# ==========================================================
+# MODULE 4: HAIR INVENTORY MANAGEMENT
+# ==========================================================
+
+@ngo_bp.route('/inventory/hair')
+@role_required('ngo')
+@ngo_approved_required
+def hair_inventory():
+    """View and manage collected raw hair inventory for this NGO."""
+    user_id = session.get('user_id')
+    profile_data = NGO.get_by_user_id(user_id)
+
+    status_filter = request.args.get('status', 'all').strip()
+    hair_type_filter = request.args.get('hair_type', 'all').strip()
+
+    if status_filter not in HairInventory.VALID_STATUSES:
+        status_filter = 'all'
+    if hair_type_filter == 'all':
+        hair_type_filter = None
+
+    items = HairInventory.get_by_ngo(
+        ngo_id=profile_data['id'],
+        status=status_filter if status_filter != 'all' else None,
+        hair_type=hair_type_filter
+    )
+    stats = HairInventory.count_by_ngo(profile_data['id'])
+
+    return render_template(
+        'ngo/inventory_hair.html',
+        items=items,
+        stats=stats,
+        status_filter=status_filter,
+        hair_type_filter=hair_type_filter or 'all',
+        profile=profile_data
+    )
+
+
+@ngo_bp.route('/inventory/hair/add', methods=['POST'])
+@role_required('ngo')
+@ngo_approved_required
+def add_hair_inventory():
+    """Manually record a collected or acquired hair bundle into inventory."""
+    user_id = session.get('user_id')
+    profile_data = NGO.get_by_user_id(user_id)
+
+    hair_type = request.form.get('hair_type', '').strip()
+    hair_length_str = request.form.get('hair_length', '').strip()
+    hair_condition = request.form.get('hair_condition', '').strip()
+    quantity_or_weight = request.form.get('quantity_or_weight', '').strip()
+    status = request.form.get('status', 'In Stock').strip()
+    notes = request.form.get('notes', '').strip()
+
+    errors = []
+    if not hair_type:
+        errors.append("Hair type is required.")
+    if not hair_condition:
+        errors.append("Hair condition is required.")
+
+    length_val = 0.0
+    try:
+        length_val = float(hair_length_str)
+        if length_val <= 0:
+            errors.append("Hair length must be greater than 0 cm.")
+    except (ValueError, TypeError):
+        errors.append("Please provide a valid numeric hair length.")
+
+    if errors:
+        for err in errors:
+            flash(err, 'danger')
+        return redirect(url_for('ngo.hair_inventory'))
+
+    HairInventory.create(
+        ngo_id=profile_data['id'],
+        hair_type=hair_type,
+        hair_length=length_val,
+        hair_condition=hair_condition,
+        quantity_or_weight=quantity_or_weight if quantity_or_weight else None,
+        status=status,
+        notes=notes if notes else None
+    )
+
+    flash(f"Hair bundle ({length_val} cm, {hair_type}) added to inventory successfully!", 'success')
+    return redirect(url_for('ngo.hair_inventory'))
+
+
+@ngo_bp.route('/inventory/hair/<int:item_id>/status', methods=['POST'])
+@role_required('ngo')
+@ngo_approved_required
+def update_hair_status(item_id):
+    """Update status of a hair inventory item."""
+    user_id = session.get('user_id')
+    profile_data = NGO.get_by_user_id(user_id)
+
+    item = HairInventory.get_by_id(item_id)
+    if not item or item['ngo_id'] != profile_data['id']:
+        flash("ACCESS DENIED: Unauthorized inventory access.", 'danger')
+        return redirect(url_for('ngo.hair_inventory'))
+
+    new_status = request.form.get('status', '').strip()
+    notes = request.form.get('notes', '').strip()
+    if new_status in HairInventory.VALID_STATUSES:
+        HairInventory.update_status(item_id, new_status, notes if notes else item.get('notes'))
+        flash(f"Inventory item #{item_id} status updated to '{new_status}'.", 'success')
+    else:
+        flash("Invalid status specified.", 'danger')
+
+    return redirect(url_for('ngo.hair_inventory'))
+
+
+@ngo_bp.route('/inventory/hair/<int:item_id>/delete', methods=['POST'])
+@role_required('ngo')
+@ngo_approved_required
+def delete_hair_inventory(item_id):
+    """Delete a hair inventory item."""
+    user_id = session.get('user_id')
+    profile_data = NGO.get_by_user_id(user_id)
+
+    success = HairInventory.delete(item_id, profile_data['id'])
+    if success:
+        flash(f"Hair inventory item #{item_id} has been removed.", 'info')
+    else:
+        flash("Item not found or access denied.", 'danger')
+
+    return redirect(url_for('ngo.hair_inventory'))
+
+
+# ==========================================================
+# MODULE 4: WIG INVENTORY MANAGEMENT
+# ==========================================================
+
+@ngo_bp.route('/inventory/wigs')
+@role_required('ngo')
+@ngo_approved_required
+def wig_inventory():
+    """View and manage crafted wigs inventory for this NGO."""
+    user_id = session.get('user_id')
+    profile_data = NGO.get_by_user_id(user_id)
+
+    status_filter = request.args.get('status', 'all').strip()
+    source_filter = request.args.get('hair_source', 'all').strip()
+
+    if status_filter not in Wig.VALID_STATUSES:
+        status_filter = 'all'
+    if source_filter not in Wig.VALID_SOURCES:
+        source_filter = 'all'
+
+    wigs = Wig.get_by_ngo(
+        ngo_id=profile_data['id'],
+        status=status_filter if status_filter != 'all' else None,
+        hair_source=source_filter if source_filter != 'all' else None
+    )
+    stats = Wig.count_by_ngo(profile_data['id'])
+
+    return render_template(
+        'ngo/inventory_wigs.html',
+        wigs=wigs,
+        stats=stats,
+        status_filter=status_filter,
+        source_filter=source_filter,
+        profile=profile_data
+    )
+
+
+@ngo_bp.route('/inventory/wigs/add', methods=['POST'])
+@role_required('ngo')
+@ngo_approved_required
+def add_wig():
+    """Add a new crafted natural-hair wig to inventory."""
+    user_id = session.get('user_id')
+    profile_data = NGO.get_by_user_id(user_id)
+
+    wig_type = request.form.get('wig_type', '').strip()
+    hair_source = request.form.get('hair_source', 'Natural').strip()
+    hair_color = request.form.get('hair_color', '').strip()
+    hair_length_str = request.form.get('hair_length', '').strip()
+    size = request.form.get('size', 'Medium').strip()
+    condition = request.form.get('condition', 'New / Sanitized').strip()
+    status = request.form.get('status', 'Available').strip()
+    notes = request.form.get('notes', '').strip()
+
+    errors = []
+    if not wig_type:
+        errors.append("Wig name / style is required.")
+    if not hair_color:
+        errors.append("Hair color is required.")
+
+    length_val = 0.0
+    try:
+        length_val = float(hair_length_str)
+        if length_val <= 0:
+            errors.append("Wig hair length must be greater than 0 cm.")
+    except (ValueError, TypeError):
+        errors.append("Please provide a valid numeric hair length.")
+
+    if errors:
+        for err in errors:
+            flash(err, 'danger')
+        return redirect(url_for('ngo.wig_inventory'))
+
+    Wig.create(
+        ngo_id=profile_data['id'],
+        wig_type=wig_type,
+        hair_source=hair_source,
+        hair_color=hair_color,
+        hair_length=length_val,
+        size=size,
+        condition=condition,
+        status=status,
+        notes=notes if notes else None
+    )
+
+    flash(f"Wig '{wig_type}' ({hair_source}, {length_val} cm) added to inventory successfully!", 'success')
+    return redirect(url_for('ngo.wig_inventory'))
+
+
+@ngo_bp.route('/inventory/wigs/<int:wig_id>/edit', methods=['POST'])
+@role_required('ngo')
+@ngo_approved_required
+def edit_wig(wig_id):
+    """Update details for a specific wig."""
+    user_id = session.get('user_id')
+    profile_data = NGO.get_by_user_id(user_id)
+
+    wig = Wig.get_by_id(wig_id)
+    if not wig or wig['ngo_id'] != profile_data['id']:
+        flash("ACCESS DENIED: Unauthorized wig inventory access.", 'danger')
+        return redirect(url_for('ngo.wig_inventory'))
+
+    wig_type = request.form.get('wig_type', '').strip()
+    hair_source = request.form.get('hair_source', 'Natural').strip()
+    hair_color = request.form.get('hair_color', '').strip()
+    hair_length_str = request.form.get('hair_length', '').strip()
+    size = request.form.get('size', 'Medium').strip()
+    condition = request.form.get('condition', 'New / Sanitized').strip()
+    status = request.form.get('status', 'Available').strip()
+    notes = request.form.get('notes', '').strip()
+
+    try:
+        length_val = float(hair_length_str)
+    except (ValueError, TypeError):
+        length_val = wig['hair_length']
+
+    Wig.update(
+        wig_id=wig_id,
+        ngo_id=profile_data['id'],
+        wig_type=wig_type or wig['wig_type'],
+        hair_source=hair_source,
+        hair_color=hair_color or wig['hair_color'],
+        hair_length=length_val,
+        size=size,
+        condition=condition,
+        status=status,
+        notes=notes if notes else None
+    )
+
+    flash(f"Wig #{wig_id} '{wig_type}' details updated successfully.", 'success')
+    return redirect(url_for('ngo.wig_inventory'))
+
+
+@ngo_bp.route('/inventory/wigs/<int:wig_id>/delete', methods=['POST'])
+@role_required('ngo')
+@ngo_approved_required
+def delete_wig(wig_id):
+    """Delete a wig from inventory."""
+    user_id = session.get('user_id')
+    profile_data = NGO.get_by_user_id(user_id)
+
+    success, msg = Wig.delete(wig_id, profile_data['id'])
+    if success:
+        flash(msg, 'success')
+    else:
+        flash(msg, 'danger')
+
+    return redirect(url_for('ngo.wig_inventory'))
+
+
+# ==========================================================
+# MODULE 5 & 6: RECIPIENT WIG REQUEST MANAGEMENT & FULFILLMENT
+# ==========================================================
+
+@ngo_bp.route('/wig-requests')
+@role_required('ngo')
+@ngo_approved_required
+def wig_requests():
+    """View incoming and assigned recipient natural-hair wig requests."""
+    user_id = session.get('user_id')
+    profile_data = NGO.get_by_user_id(user_id)
+
+    status_filter = request.args.get('status', 'all').strip()
+    if status_filter not in WigRequest.VALID_STATUSES:
+        status_filter = 'all'
+
+    requests_list = WigRequest.get_by_ngo(
+        ngo_id=profile_data['id'],
+        status=status_filter if status_filter != 'all' else None
+    )
+    stats = WigRequest.count_by_ngo(profile_data['id'])
+
+    return render_template(
+        'ngo/wig_requests.html',
+        requests=requests_list,
+        stats=stats,
+        status_filter=status_filter,
+        profile=profile_data
+    )
+
+
+@ngo_bp.route('/wig-requests/<int:request_id>')
+@role_required('ngo')
+@ngo_approved_required
+def view_wig_request(request_id):
+    """Detailed review page for a recipient wig request, with wig matching and tracking updates."""
+    user_id = session.get('user_id')
+    profile_data = NGO.get_by_user_id(user_id)
+
+    req = WigRequest.get_by_id(request_id)
+    if not req:
+        flash('Wig request record not found.', 'danger')
+        return redirect(url_for('ngo.wig_requests'))
+
+    # If assigned to another NGO, prevent access
+    if req['ngo_id'] and req['ngo_id'] != profile_data['id']:
+        flash("ACCESS DENIED: This wig request is assigned to another organization.", 'danger')
+        return render_template('errors/403.html', message="ACCESS DENIED: Unauthorized wig request access."), 403
+
+    timeline = WigRequest.get_tracking_timeline(request_id)
+    available_wigs = Wig.get_available_for_ngo(profile_data['id'])
+
+    return render_template(
+        'ngo/wig_request_detail.html',
+        request_item=req,
+        timeline=timeline,
+        available_wigs=available_wigs,
+        profile=profile_data,
+        status_sequence=WigRequest.STATUS_SEQUENCE
+    )
+
+
+@ngo_bp.route('/wig-requests/<int:request_id>/review', methods=['POST'])
+@role_required('ngo')
+@ngo_approved_required
+def review_wig_request(request_id):
+    """Mark request as Under Review and claim assignment for this NGO."""
+    user_id = session.get('user_id')
+    profile_data = NGO.get_by_user_id(user_id)
+    remarks = request.form.get('remarks', 'Application is under review by our medical donation team.').strip()
+
+    success, msg = WigRequest.update_status(
+        request_id=request_id,
+        new_status='Under Review',
+        remarks=remarks,
+        user_id=user_id,
+        ngo_id=profile_data['id']
+    )
+    flash(msg, 'success' if success else 'danger')
+    return redirect(url_for('ngo.view_wig_request', request_id=request_id))
+
+
+@ngo_bp.route('/wig-requests/<int:request_id>/approve', methods=['POST'])
+@role_required('ngo')
+@ngo_approved_required
+def approve_wig_request(request_id):
+    """Approve a recipient wig request."""
+    user_id = session.get('user_id')
+    profile_data = NGO.get_by_user_id(user_id)
+    remarks = request.form.get('remarks', 'Request approved! Natural-hair wig will be prepared/matched.').strip()
+
+    success, msg = WigRequest.update_status(
+        request_id=request_id,
+        new_status='Approved',
+        remarks=remarks,
+        user_id=user_id,
+        ngo_id=profile_data['id']
+    )
+    flash(msg, 'success' if success else 'danger')
+    return redirect(url_for('ngo.view_wig_request', request_id=request_id))
+
+
+@ngo_bp.route('/wig-requests/<int:request_id>/reject', methods=['POST'])
+@role_required('ngo')
+@ngo_approved_required
+def reject_wig_request(request_id):
+    """Reject a recipient wig request with an explanatory reason."""
+    user_id = session.get('user_id')
+    profile_data = NGO.get_by_user_id(user_id)
+    reason = request.form.get('rejection_reason', 'Criteria not met or outside current allocation quota.').strip()
+
+    success, msg = WigRequest.update_status(
+        request_id=request_id,
+        new_status='Rejected',
+        remarks=f"Request rejected: {reason}",
+        rejection_reason=reason,
+        user_id=user_id,
+        ngo_id=profile_data['id']
+    )
+    flash(msg, 'warning' if success else 'danger')
+    return redirect(url_for('ngo.view_wig_request', request_id=request_id))
+
+
+@ngo_bp.route('/wig-requests/<int:request_id>/assign', methods=['POST'])
+@role_required('ngo')
+@ngo_approved_required
+def assign_wig_to_request(request_id):
+    """Assign an available wig from this NGO's inventory to the approved request."""
+    user_id = session.get('user_id')
+    profile_data = NGO.get_by_user_id(user_id)
+    wig_id_str = request.form.get('wig_id', '').strip()
+    remarks = request.form.get('remarks', '').strip()
+
+    if not wig_id_str or not wig_id_str.isdigit():
+        flash("Please select a valid available wig from the inventory.", 'danger')
+        return redirect(url_for('ngo.view_wig_request', request_id=request_id))
+
+    wig_id = int(wig_id_str)
+    success, msg = WigRequest.assign_wig(
+        request_id=request_id,
+        wig_id=wig_id,
+        ngo_id=profile_data['id'],
+        remarks=remarks if remarks else None,
+        user_id=user_id
+    )
+
+    flash(msg, 'success' if success else 'danger')
+    return redirect(url_for('ngo.view_wig_request', request_id=request_id))
+
+
+@ngo_bp.route('/wig-requests/<int:request_id>/update-status', methods=['POST'])
+@role_required('ngo')
+@ngo_approved_required
+def update_wig_request_status(request_id):
+    """Advance the fulfillment/dispatch/delivery status of a wig request."""
+    user_id = session.get('user_id')
+    profile_data = NGO.get_by_user_id(user_id)
+
+    new_status = request.form.get('status', '').strip()
+    remarks = request.form.get('remarks', '').strip()
+    tracking_number = request.form.get('tracking_number', '').strip()
+    courier_service = request.form.get('courier_service', '').strip()
+    est_date = request.form.get('estimated_delivery_date', '').strip()
+
+    req = WigRequest.get_by_id(request_id)
+    if not req or (req['ngo_id'] and req['ngo_id'] != profile_data['id']):
+        flash("ACCESS DENIED: Unauthorized wig request access.", 'danger')
+        return redirect(url_for('ngo.wig_requests'))
+
+    success, msg = WigRequest.update_status(
+        request_id=request_id,
+        new_status=new_status,
+        remarks=remarks if remarks else f"Status updated to {new_status}.",
+        tracking_number=tracking_number if tracking_number else req.get('tracking_number'),
+        courier_service=courier_service if courier_service else req.get('courier_service'),
+        estimated_delivery_date=est_date if est_date else req.get('estimated_delivery_date'),
+        user_id=user_id,
+        ngo_id=profile_data['id']
+    )
+
+    flash(msg, 'success' if success else 'danger')
+    return redirect(url_for('ngo.view_wig_request', request_id=request_id))
+
 
 

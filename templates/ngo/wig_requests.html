@@ -1,0 +1,165 @@
+{% extends "base.html" %}
+
+{% block title %}Recipient Wig Requests - {{ profile.organization_name }} - HairSync{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <!-- Header -->
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
+        <div>
+            <div class="d-flex align-items-center gap-2 mb-1">
+                <span class="badge badge-role-ngo px-2 py-1 text-uppercase">{{ profile.organization_name }}</span>
+                <span class="text-muted small">Medical Allocation Queue</span>
+            </div>
+            <h2 class="fw-bold mb-0">Recipient Wig Requests</h2>
+            <p class="text-muted small mb-0">Review incoming applications, approve requests, match available natural wigs, and update delivery tracking.</p>
+        </div>
+        <div class="d-flex gap-2">
+            <a href="{{ url_for('ngo.wig_inventory') }}" class="btn btn-outline-secondary btn-sm px-3">
+                <i class="bi bi-person-bounding-box me-1"></i> View Available Wigs
+            </a>
+        </div>
+    </div>
+
+    <!-- Summary Metrics -->
+    <div class="row g-3 mb-4">
+        <div class="col-sm-6 col-lg-2">
+            <div class="card border-0 shadow-sm rounded-4 p-3 bg-white text-center">
+                <div class="text-muted small fw-semibold text-uppercase">Total</div>
+                <h3 class="fw-bold mb-0">{{ stats.total }}</h3>
+            </div>
+        </div>
+        <div class="col-sm-6 col-lg-2">
+            <div class="card border-0 shadow-sm rounded-4 p-3 bg-white text-center">
+                <div class="text-muted small fw-semibold text-uppercase">Under Review</div>
+                <h3 class="fw-bold mb-0 text-warning">{{ stats.under_review }}</h3>
+            </div>
+        </div>
+        <div class="col-sm-6 col-lg-2">
+            <div class="card border-0 shadow-sm rounded-4 p-3 bg-white text-center">
+                <div class="text-muted small fw-semibold text-uppercase">Approved</div>
+                <h3 class="fw-bold mb-0 text-info">{{ stats.approved }}</h3>
+            </div>
+        </div>
+        <div class="col-sm-6 col-lg-2">
+            <div class="card border-0 shadow-sm rounded-4 p-3 bg-white text-center">
+                <div class="text-muted small fw-semibold text-uppercase">Assigned</div>
+                <h3 class="fw-bold mb-0 text-primary">{{ stats.assigned }}</h3>
+            </div>
+        </div>
+        <div class="col-sm-6 col-lg-2">
+            <div class="card border-0 shadow-sm rounded-4 p-3 bg-white text-center">
+                <div class="text-muted small fw-semibold text-uppercase">Dispatched</div>
+                <h3 class="fw-bold mb-0 text-info">{{ stats.dispatched }}</h3>
+            </div>
+        </div>
+        <div class="col-sm-6 col-lg-2">
+            <div class="card border-0 shadow-sm rounded-4 p-3 bg-white text-center">
+                <div class="text-muted small fw-semibold text-uppercase">Delivered</div>
+                <h3 class="fw-bold mb-0 text-success">{{ stats.delivered }}</h3>
+            </div>
+        </div>
+    </div>
+
+    <!-- Requests Table -->
+    <div class="card border-0 shadow-sm rounded-4 overflow-hidden mb-4">
+        <div class="card-header bg-white py-3 px-4 border-bottom d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3">
+            <h5 class="fw-bold mb-0"><i class="bi bi-gift-fill text-primary me-2"></i> Requests Fulfillment Queue</h5>
+            <div class="d-flex flex-wrap gap-2">
+                <div class="btn-group btn-group-sm">
+                    <a href="{{ url_for('ngo.wig_requests', status='all') }}" class="btn btn-outline-secondary {% if status_filter == 'all' %}active{% endif %}">All</a>
+                    <a href="{{ url_for('ngo.wig_requests', status='Submitted') }}" class="btn btn-outline-secondary {% if status_filter == 'Submitted' %}active{% endif %}">New</a>
+                    <a href="{{ url_for('ngo.wig_requests', status='Under Review') }}" class="btn btn-outline-secondary {% if status_filter == 'Under Review' %}active{% endif %}">Review</a>
+                    <a href="{{ url_for('ngo.wig_requests', status='Approved') }}" class="btn btn-outline-secondary {% if status_filter == 'Approved' %}active{% endif %}">Approved</a>
+                    <a href="{{ url_for('ngo.wig_requests', status='Wig Assigned') }}" class="btn btn-outline-secondary {% if status_filter == 'Wig Assigned' %}active{% endif %}">Assigned</a>
+                    <a href="{{ url_for('ngo.wig_requests', status='Dispatched') }}" class="btn btn-outline-secondary {% if status_filter == 'Dispatched' %}active{% endif %}">Dispatched</a>
+                </div>
+            </div>
+        </div>
+        <div class="card-body p-0">
+            {% if requests %}
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th class="ps-4">Request</th>
+                                <th>Recipient</th>
+                                <th>Medical Reason</th>
+                                <th>Desired Specifications</th>
+                                <th>Assigned Wig</th>
+                                <th>Status</th>
+                                <th class="text-end pe-4">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for req in requests %}
+                                <tr>
+                                    <td class="ps-4">
+                                        <span class="badge bg-light text-dark border">#{{ req.id }}</span>
+                                        <div class="small text-muted">{{ req.created_at[:10] }}</div>
+                                    </td>
+                                    <td>
+                                        <strong class="text-dark">{{ req.recipient_name }}</strong>
+                                        <div class="small text-muted"><i class="bi bi-geo-alt me-1"></i> {{ req.delivery_district }}</div>
+                                        <div class="small text-muted"><i class="bi bi-telephone me-1"></i> {{ req.contact_phone }}</div>
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-danger-subtle text-danger border border-danger-subtle small mb-1">Medical Need</span>
+                                        <div class="small text-muted text-truncate" style="max-width: 220px;" title="{{ req.reason_for_request }}">
+                                            {{ req.reason_for_request }}
+                                        </div>
+                                    </td>
+                                    <td class="small">
+                                        <div>Style: <strong class="text-dark">{{ req.preferred_wig_type }}</strong></div>
+                                        <div>Color: {{ req.preferred_color }} | Length: {{ req.preferred_length }} cm</div>
+                                        <div>Cap Size: <span class="badge bg-light text-dark border">{{ req.preferred_size }}</span></div>
+                                    </td>
+                                    <td>
+                                        {% if req.assigned_wig_name %}
+                                            <span class="badge bg-success-subtle text-success border border-success-subtle">
+                                                <i class="bi bi-check2-circle me-1"></i> {{ req.assigned_wig_name }}
+                                            </span>
+                                        {% else %}
+                                            <span class="text-muted small fst-italic">Unassigned</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if req.status == 'Submitted' %}
+                                            <span class="badge bg-secondary-subtle text-secondary border px-2 py-1"><i class="bi bi-send me-1"></i> Submitted</span>
+                                        {% elif req.status == 'Under Review' %}
+                                            <span class="badge bg-warning-subtle text-warning-emphasis border border-warning-subtle px-2 py-1"><i class="bi bi-hourglass me-1"></i> Under Review</span>
+                                        {% elif req.status == 'Approved' %}
+                                            <span class="badge bg-info-subtle text-info-emphasis border border-info-subtle px-2 py-1"><i class="bi bi-hand-thumbs-up me-1"></i> Approved</span>
+                                        {% elif req.status == 'Wig Assigned' %}
+                                            <span class="badge bg-primary-subtle text-primary border border-primary-subtle px-2 py-1"><i class="bi bi-gift me-1"></i> Wig Assigned</span>
+                                        {% elif req.status in ['Preparing', 'Ready for Dispatch'] %}
+                                            <span class="badge bg-primary-subtle text-primary border border-primary-subtle px-2 py-1"><i class="bi bi-scissors me-1"></i> {{ req.status }}</span>
+                                        {% elif req.status in ['Dispatched', 'In Transit', 'Out for Delivery'] %}
+                                            <span class="badge bg-info-subtle text-info-emphasis border border-info-subtle px-2 py-1"><i class="bi bi-truck me-1"></i> {{ req.status }}</span>
+                                        {% elif req.status == 'Delivered' %}
+                                            <span class="badge bg-success-subtle text-success border border-success-subtle px-2 py-1"><i class="bi bi-check-circle-fill me-1"></i> Delivered</span>
+                                        {% elif req.status == 'Rejected' %}
+                                            <span class="badge bg-danger-subtle text-danger border border-danger-subtle px-2 py-1"><i class="bi bi-x-circle me-1"></i> Rejected</span>
+                                        {% endif %}
+                                    </td>
+                                    <td class="text-end pe-4">
+                                        <a href="{{ url_for('ngo.view_wig_request', request_id=req.id) }}" class="btn btn-sm btn-hs-primary rounded-pill px-3">
+                                            <i class="bi bi-eye me-1"></i> Review &amp; Fulfill
+                                        </a>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <div class="text-center py-5">
+                    <i class="bi bi-inbox text-muted display-5 d-block mb-3"></i>
+                    <h5 class="fw-bold mb-1">No Requests in This Queue</h5>
+                    <p class="text-muted small mb-0">No recipient wig requests match the selected status filter.</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

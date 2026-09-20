@@ -1,0 +1,267 @@
+{% extends "base.html" %}
+
+{% block title %}Hair Inventory - {{ profile.organization_name }} - HairSync{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <!-- Header -->
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
+        <div>
+            <div class="d-flex align-items-center gap-2 mb-1">
+                <span class="badge badge-role-ngo px-2 py-1 text-uppercase">{{ profile.organization_name }}</span>
+                <span class="text-muted small">Raw Materials Repository</span>
+            </div>
+            <h2 class="fw-bold mb-0">Donated Hair Inventory</h2>
+            <p class="text-muted small mb-0">Track raw collected hair bundles, sanitized donor hair, and bundles assigned for wig crafting.</p>
+        </div>
+        <div class="d-flex gap-2">
+            <button class="btn btn-hs-primary btn-sm px-3" data-bs-toggle="modal" data-bs-target="#addHairModal">
+                <i class="bi bi-plus-circle me-1"></i> Add Hair Bundle
+            </button>
+            <a href="{{ url_for('ngo.wig_inventory') }}" class="btn btn-outline-secondary btn-sm px-3">
+                <i class="bi bi-person-bounding-box me-1"></i> Wigs Inventory
+            </a>
+        </div>
+    </div>
+
+    <!-- Summary Metrics -->
+    <div class="row g-3 mb-4">
+        <div class="col-sm-6 col-lg-3">
+            <div class="card border-0 shadow-sm rounded-4 p-3 bg-white">
+                <div class="d-flex align-items-center justify-content-between">
+                    <div>
+                        <div class="text-muted small fw-semibold text-uppercase">Total Batches</div>
+                        <h3 class="fw-bold mb-0">{{ stats.total_items }}</h3>
+                    </div>
+                    <div class="stat-icon icon-ngo">
+                        <i class="bi bi-boxes"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-sm-6 col-lg-3">
+            <div class="card border-0 shadow-sm rounded-4 p-3 bg-white">
+                <div class="d-flex align-items-center justify-content-between">
+                    <div>
+                        <div class="text-muted small fw-semibold text-uppercase">In Stock (Sanitized)</div>
+                        <h3 class="fw-bold mb-0 text-success">{{ stats.in_stock }}</h3>
+                    </div>
+                    <div class="stat-icon" style="background: var(--hs-primary-light); color: var(--hs-primary);">
+                        <i class="bi bi-check-circle"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-sm-6 col-lg-3">
+            <div class="card border-0 shadow-sm rounded-4 p-3 bg-white">
+                <div class="d-flex align-items-center justify-content-between">
+                    <div>
+                        <div class="text-muted small fw-semibold text-uppercase">In Processing</div>
+                        <h3 class="fw-bold mb-0 text-warning">{{ stats.in_processing }}</h3>
+                    </div>
+                    <div class="stat-icon" style="background: var(--hs-warning-light); color: var(--hs-warning);">
+                        <i class="bi bi-hourglass-split"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-sm-6 col-lg-3">
+            <div class="card border-0 shadow-sm rounded-4 p-3 bg-white">
+                <div class="d-flex align-items-center justify-content-between">
+                    <div>
+                        <div class="text-muted small fw-semibold text-uppercase">Used in Wigs</div>
+                        <h3 class="fw-bold mb-0 text-info">{{ stats.used_in_wig }}</h3>
+                    </div>
+                    <div class="stat-icon" style="background: var(--hs-info-light); color: var(--hs-info);">
+                        <i class="bi bi-scissors"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filters & Table -->
+    <div class="card border-0 shadow-sm rounded-4 overflow-hidden mb-4">
+        <div class="card-header bg-white py-3 px-4 border-bottom d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3">
+            <h5 class="fw-bold mb-0"><i class="bi bi-list-nested text-primary me-2"></i> Hair Stock Ledger</h5>
+            <div class="d-flex flex-wrap gap-2">
+                <div class="btn-group btn-group-sm">
+                    <a href="{{ url_for('ngo.hair_inventory', status='all') }}" class="btn btn-outline-secondary {% if status_filter == 'all' %}active{% endif %}">All</a>
+                    <a href="{{ url_for('ngo.hair_inventory', status='In Stock') }}" class="btn btn-outline-secondary {% if status_filter == 'In Stock' %}active{% endif %}">In Stock</a>
+                    <a href="{{ url_for('ngo.hair_inventory', status='In Processing') }}" class="btn btn-outline-secondary {% if status_filter == 'In Processing' %}active{% endif %}">Processing</a>
+                    <a href="{{ url_for('ngo.hair_inventory', status='Used in Wig') }}" class="btn btn-outline-secondary {% if status_filter == 'Used in Wig' %}active{% endif %}">Used</a>
+                </div>
+            </div>
+        </div>
+        <div class="card-body p-0">
+            {% if items %}
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th class="ps-4">Batch ID</th>
+                                <th>Hair Type &amp; Length</th>
+                                <th>Condition</th>
+                                <th>Weight / Qty</th>
+                                <th>Source / Donation</th>
+                                <th>Status</th>
+                                <th>Logged On</th>
+                                <th class="text-end pe-4">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for item in items %}
+                                <tr>
+                                    <td class="ps-4">
+                                        <span class="badge bg-light text-dark border">#{{ item.id }}</span>
+                                    </td>
+                                    <td>
+                                        <strong class="text-dark">{{ item.hair_length }} cm</strong>
+                                        <div class="small text-muted">{{ item.hair_type }}</div>
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-light text-dark border small">{{ item.hair_condition }}</span>
+                                    </td>
+                                    <td>
+                                        {{ item.quantity_or_weight or '—' }}
+                                    </td>
+                                    <td>
+                                        {% if item.donation_id %}
+                                            <span class="small fw-semibold text-primary"><i class="bi bi-link-45deg"></i> Donation #{{ item.donation_id }}</span>
+                                            <div class="small text-muted">{{ item.donor_name or 'Donor' }}</div>
+                                        {% else %}
+                                            <span class="small text-muted">Direct Stock Entry</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if item.status == 'In Stock' %}
+                                            <span class="badge bg-success-subtle text-success border border-success-subtle px-2 py-1">In Stock</span>
+                                        {% elif item.status == 'In Processing' %}
+                                            <span class="badge bg-warning-subtle text-warning-emphasis border border-warning-subtle px-2 py-1">In Processing</span>
+                                        {% elif item.status == 'Used in Wig' %}
+                                            <span class="badge bg-info-subtle text-info-emphasis border border-info-subtle px-2 py-1">Used in Wig</span>
+                                        {% else %}
+                                            <span class="badge bg-secondary-subtle text-secondary border px-2 py-1">{{ item.status }}</span>
+                                        {% endif %}
+                                    </td>
+                                    <td class="small text-muted">{{ item.created_at[:10] }}</td>
+                                    <td class="text-end pe-4">
+                                        <div class="d-flex justify-content-end gap-1">
+                                            <!-- Status Update Dropdown -->
+                                            <div class="dropdown">
+                                                <button class="btn btn-sm btn-outline-secondary rounded-pill py-0 px-2" type="button" data-bs-toggle="dropdown">
+                                                    Status <i class="bi bi-chevron-down ms-1"></i>
+                                                </button>
+                                                <ul class="dropdown-menu dropdown-menu-end shadow-sm border-0">
+                                                    <li>
+                                                        <form method="POST" action="{{ url_for('ngo.update_hair_status', item_id=item.id) }}">
+                                                            <input type="hidden" name="status" value="In Stock">
+                                                            <button type="submit" class="dropdown-item small text-success">Mark In Stock</button>
+                                                        </form>
+                                                    </li>
+                                                    <li>
+                                                        <form method="POST" action="{{ url_for('ngo.update_hair_status', item_id=item.id) }}">
+                                                            <input type="hidden" name="status" value="In Processing">
+                                                            <button type="submit" class="dropdown-item small text-warning">Mark In Processing</button>
+                                                        </form>
+                                                    </li>
+                                                    <li>
+                                                        <form method="POST" action="{{ url_for('ngo.update_hair_status', item_id=item.id) }}">
+                                                            <input type="hidden" name="status" value="Used in Wig">
+                                                            <button type="submit" class="dropdown-item small text-info">Mark Used in Wig</button>
+                                                        </form>
+                                                    </li>
+                                                    <li>
+                                                        <form method="POST" action="{{ url_for('ngo.update_hair_status', item_id=item.id) }}">
+                                                            <input type="hidden" name="status" value="Disposed">
+                                                            <button type="submit" class="dropdown-item small text-danger">Mark Disposed</button>
+                                                        </form>
+                                                    </li>
+                                                </ul>
+                                            </div>
+
+                                            <form method="POST" action="{{ url_for('ngo.delete_hair_inventory', item_id=item.id) }}" onsubmit="return confirm('Delete this hair batch record?');">
+                                                <button type="submit" class="btn btn-sm btn-outline-danger rounded-circle p-1" title="Delete" style="width: 28px; height: 28px;">
+                                                    <i class="bi bi-trash"></i>
+                                                </button>
+                                            </form>
+                                        </div>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <div class="text-center py-5">
+                    <i class="bi bi-inbox text-muted display-5 d-block mb-3"></i>
+                    <h5 class="fw-bold mb-1">No Hair Inventory Records</h5>
+                    <p class="text-muted small mb-3">Completed hair donations will automatically appear here, or you can record manual batches.</p>
+                    <button class="btn btn-hs-primary rounded-pill px-4" data-bs-toggle="modal" data-bs-target="#addHairModal">
+                        <i class="bi bi-plus-circle me-1"></i> Add First Bundle
+                    </button>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Modal: Add Hair Bundle -->
+<div class="modal fade" id="addHairModal" tabindex="-1" aria-labelledby="addHairModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow rounded-4">
+            <div class="modal-header border-bottom py-3 px-4">
+                <h5 class="modal-title fw-bold" id="addHairModalLabel"><i class="bi bi-scissors text-primary me-2"></i> Add Hair Bundle to Stock</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form method="POST" action="{{ url_for('ngo.add_hair_inventory') }}">
+                <div class="modal-body p-4">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">Hair Type <span class="text-danger">*</span></label>
+                            <select class="form-select" name="hair_type" required>
+                                <option value="Straight" selected>Straight</option>
+                                <option value="Wavy">Wavy</option>
+                                <option value="Curly">Curly</option>
+                                <option value="Coily">Coily</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">Measured Length (cm) <span class="text-danger">*</span></label>
+                            <input type="number" step="0.5" min="1" class="form-control" name="hair_length" placeholder="e.g. 28.5" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">Hair Condition <span class="text-danger">*</span></label>
+                            <select class="form-select" name="hair_condition" required>
+                                <option value="Virgin / Untreated" selected>Virgin / Untreated</option>
+                                <option value="Dyed / Colored (Natural shade)">Dyed / Colored (Natural shade)</option>
+                                <option value="Chemically Treated">Chemically Treated</option>
+                                <option value="Sanitized Ponytail">Sanitized Ponytail</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">Weight or Quantity</label>
+                            <input type="text" class="form-control" name="quantity_or_weight" placeholder="e.g. 160 grams">
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label fw-semibold">Initial Status</label>
+                            <select class="form-select" name="status">
+                                <option value="In Stock" selected>In Stock (Ready for Sorting)</option>
+                                <option value="In Processing">In Processing (Washing / Sanitization)</option>
+                            </select>
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label fw-semibold">Internal Notes</label>
+                            <textarea class="form-control" name="notes" rows="2" placeholder="Batch source or sorting details..."></textarea>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer border-top py-3 px-4">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-hs-primary px-4 fw-semibold">Save to Inventory</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
