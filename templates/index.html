@@ -7,7 +7,7 @@
 <section class="hero-section">
     <div class="container position-relative">
         <div class="row align-items-center g-5">
-            <div class="col-lg-7">
+            <div class="col-lg-8">
                 <div class="hero-badge">
                     <i class="bi bi-heart-pulse-fill"></i> Hair Donation Network
                 </div>
@@ -18,7 +18,7 @@
                 <p class="hero-subtitle">
                     HairSync bridges generous hair donors, verified NGOs, and medical wig recipients into one unified digital ecosystem. Every strand of hair donated brings hope and dignity to someone in need.
                 </p>
-                <div class="d-flex flex-wrap gap-3 mb-4">
+                <div class="d-flex flex-wrap gap-3">
                     {% if not current_user %}
                         <a href="{{ url_for('auth.register', role='donor') }}" class="btn btn-hs-primary btn-lg" id="heroDonateBtn">
                             <i class="bi bi-scissors me-2"></i> Start Donating
@@ -35,104 +35,13 @@
                         Learn More <i class="bi bi-arrow-right ms-1"></i>
                     </a>
                 </div>
-
-                <!-- Quick Highlights -->
-                <div class="row g-3 pt-3 border-top" style="border-color: var(--hs-border-light) !important;">
-                    <div class="col-sm-4 col-6">
-                        <div class="hero-stat-item">
-                            <div class="hero-stat-icon" style="background: var(--hs-primary-light); color: var(--hs-primary);">
-                                <i class="bi bi-shield-check"></i>
-                            </div>
-                            <div>
-                                <div class="fw-bold text-dark small">Verified NGOs</div>
-                                <small class="text-muted" style="font-size: 0.78rem;">Admin Audited</small>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-sm-4 col-6">
-                        <div class="hero-stat-item">
-                            <div class="hero-stat-icon" style="background: var(--hs-secondary-light); color: var(--hs-secondary);">
-                                <i class="bi bi-person-badge"></i>
-                            </div>
-                            <div>
-                                <div class="fw-bold text-dark small">Natural Wigs</div>
-                                <small class="text-muted" style="font-size: 0.78rem;">100% Human Hair</small>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-sm-4 col-12">
-                        <div class="hero-stat-item">
-                            <div class="hero-stat-icon" style="background: #e4f5f2; color: var(--hs-accent-teal);">
-                                <i class="bi bi-shield-lock"></i>
-                            </div>
-                            <div>
-                                <div class="fw-bold text-dark small">Secure Platform</div>
-                                <small class="text-muted" style="font-size: 0.78rem;">Safe & Protected</small>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="col-lg-5">
-                <div class="hero-visual-card">
-                    <div class="d-flex align-items-center justify-content-between mb-4 pb-3 border-bottom">
-                        <div class="d-flex align-items-center gap-2">
-                            <span class="brand-icon" style="width: 36px; height: 36px; font-size: 1.1rem;"><i class="bi bi-scissors"></i></span>
-                            <span class="brand-font fs-5 fw-bold">HairSync Ecosystem</span>
-                        </div>
-                        <span class="badge bg-success-subtle text-success border border-success-subtle px-2 py-1 rounded-pill small">
-                            <i class="bi bi-circle-fill me-1" style="font-size: 0.5rem;"></i> Active
-                        </span>
-                    </div>
-
-                    <!-- Role Flow Preview -->
-                    <div class="d-flex flex-column gap-3">
-                        <div class="p-3 rounded-3 d-flex align-items-center gap-3" style="background: var(--hs-primary-light); border: 1px solid rgba(26,107,74,0.1);">
-                            <div class="card-icon-wrapper icon-donor m-0" style="width: 44px; height: 44px; font-size: 1.25rem;">
-                                <i class="bi bi-person-heart"></i>
-                            </div>
-                            <div class="flex-grow-1">
-                                <h6 class="mb-0 fw-bold">1. Donors Register Hair</h6>
-                                <small class="text-muted">Specify hair length, texture, and condition</small>
-                            </div>
-                        </div>
-
-                        <div class="p-3 rounded-3 d-flex align-items-center gap-3" style="background: #e4f5f2; border: 1px solid rgba(42,157,143,0.1);">
-                            <div class="card-icon-wrapper icon-ngo m-0" style="width: 44px; height: 44px; font-size: 1.25rem;">
-                                <i class="bi bi-building"></i>
-                            </div>
-                            <div class="flex-grow-1">
-                                <h6 class="mb-0 fw-bold">2. Verified NGOs Coordinate</h6>
-                                <small class="text-muted">Approved charities manage donations</small>
-                            </div>
-                        </div>
-
-                        <div class="p-3 rounded-3 d-flex align-items-center gap-3" style="background: var(--hs-secondary-light); border: 1px solid rgba(232,97,45,0.1);">
-                            <div class="card-icon-wrapper icon-recipient m-0" style="width: 44px; height: 44px; font-size: 1.25rem;">
-                                <i class="bi bi-gift-fill"></i>
-                            </div>
-                            <div class="flex-grow-1">
-                                <h6 class="mb-0 fw-bold">3. Recipients Receive Wigs</h6>
-                                <small class="text-muted">Free natural-hair wigs for patients</small>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Test Accounts Quick Access Button -->
-                    <div class="mt-4 pt-3 border-top text-center">
-                        <button class="btn btn-sm btn-outline-secondary rounded-pill px-3" data-bs-toggle="modal" data-bs-target="#demoAccountsModal">
-                            <i class="bi bi-key me-1"></i> Quick Test Accounts (Demo)
-                        </button>
-                    </div>
-                </div>
             </div>
         </div>
     </div>
 </section>
 
 <!-- Role / Feature Cards Section -->
-<section class="py-5 bg-white" id="community">
+<section class="py-5 section-roles" id="community">
     <div class="container py-4">
         <div class="text-center max-w-700 mx-auto mb-5 reveal">
             <span class="section-badge">Unified Stakeholders</span>
@@ -143,12 +52,11 @@
         <div class="row g-4 reveal-stagger">
             <!-- Donor Card -->
             <div class="col-lg-4 col-md-6">
-                <div class="hs-card role-card-donor h-100 d-flex flex-column">
-                    <div class="card-icon-wrapper icon-donor">
-                        <i class="bi bi-person-heart"></i>
-                    </div>
-                    <span class="badge mb-2 align-self-start px-2 py-1 rounded-pill" style="background: var(--hs-primary-light); color: var(--hs-primary);">Hair Donors</span>
-                    <h3 class="h4 fw-bold">Giving the Gift of Hair</h3>
+                <div class="hs-card role-card-donor h-100 d-flex flex-column p-0">
+                    <img src="{{ url_for('static', filename='images/card-donor.png') }}" alt="Smiling hair donor holding a bundle of donated hair" class="role-card-img">
+                    <div class="p-4 d-flex flex-column flex-grow-1">
+                        <span class="badge mb-2 align-self-start px-2 py-1 rounded-pill" style="background: var(--hs-primary-light); color: var(--hs-primary);">Hair Donors</span>
+                        <h3 class="h4 fw-bold">Giving the Gift of Hair</h3>
                     <p class="text-muted flex-grow-1">
                         Register your hair profile, specify hair length (10"+), texture, and virgin hair status. Check your eligibility, find nearby donation centers, and book appointments.
                     </p>
@@ -160,17 +68,17 @@
                     <a href="{{ url_for('auth.register', role='donor') }}" class="btn btn-hs-primary rounded-pill w-100 fw-semibold">
                         Donor Registration <i class="bi bi-arrow-right ms-1"></i>
                     </a>
+                    </div>
                 </div>
             </div>
 
             <!-- NGO Card -->
             <div class="col-lg-4 col-md-6">
-                <div class="hs-card role-card-ngo h-100 d-flex flex-column">
-                    <div class="card-icon-wrapper icon-ngo">
-                        <i class="bi bi-building"></i>
-                    </div>
-                    <span class="badge mb-2 align-self-start px-2 py-1 rounded-pill" style="background: #e4f5f2; color: var(--hs-accent-teal);">Donation Centers & NGOs</span>
-                    <h3 class="h4 fw-bold">Managing Hope & Wigs</h3>
+                <div class="hs-card role-card-ngo h-100 d-flex flex-column p-0">
+                    <img src="{{ url_for('static', filename='images/card-ngo.png') }}" alt="HairSync donation center building with green signage" class="role-card-img">
+                    <div class="p-4 d-flex flex-column flex-grow-1">
+                        <span class="badge mb-2 align-self-start px-2 py-1 rounded-pill" style="background: #e4f5f2; color: var(--hs-accent-teal);">Donation Centers & NGOs</span>
+                        <h3 class="h4 fw-bold">Managing Hope & Wigs</h3>
                     <p class="text-muted flex-grow-1">
                         Government-registered NGOs can join our verified network. All NGOs are reviewed by Platform Admins to protect donors and vulnerable recipients.
                     </p>
@@ -182,17 +90,17 @@
                     <a href="{{ url_for('auth.register', role='ngo') }}" class="btn btn-hs-outline rounded-pill w-100 fw-semibold">
                         Register Your NGO <i class="bi bi-arrow-right ms-1"></i>
                     </a>
+                    </div>
                 </div>
             </div>
 
             <!-- Recipient Card -->
             <div class="col-lg-4 col-md-6">
-                <div class="hs-card role-card-recipient h-100 d-flex flex-column">
-                    <div class="card-icon-wrapper icon-recipient">
-                        <i class="bi bi-gift-fill"></i>
-                    </div>
-                    <span class="badge mb-2 align-self-start px-2 py-1 rounded-pill" style="background: var(--hs-secondary-light); color: var(--hs-secondary);">Medical Recipients</span>
-                    <h3 class="h4 fw-bold">Dignity in Healing</h3>
+                <div class="hs-card role-card-recipient h-100 d-flex flex-column p-0">
+                    <img src="{{ url_for('static', filename='images/card-recipient.jpg') }}" alt="Smiling wig recipient wearing a pink headscarf" class="role-card-img">
+                    <div class="p-4 d-flex flex-column flex-grow-1">
+                        <span class="badge mb-2 align-self-start px-2 py-1 rounded-pill" style="background: var(--hs-secondary-light); color: var(--hs-secondary);">Medical Recipients</span>
+                        <h3 class="h4 fw-bold">Dignity in Healing</h3>
                     <p class="text-muted flex-grow-1">
                         Cancer chemotherapy patients, Alopecia Areata survivors, and burn victims can apply for customized, 100% natural human-hair wigs completely free.
                     </p>
@@ -204,6 +112,7 @@
                     <a href="{{ url_for('auth.register', role='recipient') }}" class="btn btn-hs-secondary rounded-pill w-100 fw-semibold">
                         Recipient Portal <i class="bi bi-arrow-right ms-1"></i>
                     </a>
+                    </div>
                 </div>
             </div>
         </div>
@@ -211,7 +120,7 @@
 </section>
 
 <!-- How It Works Section -->
-<section class="py-5" id="how-it-works" style="background: var(--hs-accent-cream);">
+<section class="py-5 section-process" id="how-it-works">
     <div class="container py-4">
         <div class="text-center max-w-700 mx-auto mb-5 reveal">
             <span class="section-badge">Simple Process</span>
@@ -260,8 +169,8 @@
 </section>
 
 <!-- About / Mission Section -->
-<section class="py-5 bg-white" id="about">
-    <div class="container py-4">
+<section class="py-5 bg-white about-section" id="about">
+    <div class="container py-4 position-relative">
         <div class="row align-items-center g-5">
             <div class="col-lg-6 reveal">
                 <span class="section-badge">Our Mission</span>
@@ -288,7 +197,7 @@
                 </div>
             </div>
             <div class="col-lg-6 reveal">
-                <div class="card border-0 p-4 rounded-4 shadow-sm card-gradient-top" style="background: var(--hs-accent-mint);">
+                <div class="card border-0 p-4 rounded-4 shadow-sm card-gradient-top" style="background: rgba(255, 255, 255, 0.45); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);">
                     <h5 class="fw-bold mb-3 pt-2"><i class="bi bi-heart-pulse-fill me-2" style="color: var(--hs-secondary);"></i> Why HairSync Matters</h5>
                     <div class="d-flex flex-column gap-3">
                         <div class="p-3 bg-white rounded-3 d-flex align-items-start gap-3 shadow-xs">
@@ -326,87 +235,13 @@
     </div>
 </section>
 
-<!-- Upcoming / Coming Soon Section -->
-<section class="py-5" id="upcoming" style="background: var(--hs-accent-cream);">
+<!-- Trust / Impact & Call-to-Action Section -->
+<section class="trust-section py-5" id="impact">
     <div class="container py-4">
-        <div class="text-center max-w-700 mx-auto mb-5 reveal">
-            <span class="section-badge">Coming Soon</span>
-            <h2 class="section-title">Upcoming Features</h2>
-            <p class="section-subtitle">HairSync is continuously improving. Here's what's coming next to make the platform even better for our community.</p>
-        </div>
-
-        <div class="row g-4 reveal-stagger">
-            <div class="col-lg-4 col-md-6">
-                <div class="upcoming-card">
-                    <div class="upcoming-icon" style="background: var(--hs-primary-light); color: var(--hs-primary);">
-                        <i class="bi bi-map"></i>
-                    </div>
-                    <span class="badge-coming-soon mb-2 d-inline-block">Coming Soon</span>
-                    <h5 class="fw-bold mb-2">Donation Center Map</h5>
-                    <p class="text-muted small mb-0">Interactive map view of all verified donation centers across your region with real-time availability.</p>
-                </div>
-            </div>
-            <div class="col-lg-4 col-md-6">
-                <div class="upcoming-card">
-                    <div class="upcoming-icon" style="background: #e4f5f2; color: var(--hs-accent-teal);">
-                        <i class="bi bi-geo-alt-fill"></i>
-                    </div>
-                    <span class="badge-coming-soon mb-2 d-inline-block">Coming Soon</span>
-                    <h5 class="fw-bold mb-2">Nearby Center Search</h5>
-                    <p class="text-muted small mb-0">Find the closest donation centers based on your location and filter by available appointment slots.</p>
-                </div>
-            </div>
-            <div class="col-lg-4 col-md-6">
-                <div class="upcoming-card">
-                    <div class="upcoming-icon" style="background: var(--hs-secondary-light); color: var(--hs-secondary);">
-                        <i class="bi bi-box2-heart"></i>
-                    </div>
-                    <span class="badge-coming-soon mb-2 d-inline-block">Coming Soon</span>
-                    <h5 class="fw-bold mb-2">Wig Request Tracking</h5>
-                    <p class="text-muted small mb-0">Recipients can track their wig request status from crafting to delivery with live progress updates.</p>
-                </div>
-            </div>
-            <div class="col-lg-4 col-md-6">
-                <div class="upcoming-card">
-                    <div class="upcoming-icon" style="background: var(--hs-info-light); color: var(--hs-info);">
-                        <i class="bi bi-bell"></i>
-                    </div>
-                    <span class="badge-coming-soon mb-2 d-inline-block">Coming Soon</span>
-                    <h5 class="fw-bold mb-2">Real-Time Notifications</h5>
-                    <p class="text-muted small mb-0">Instant alerts for appointment confirmations, donation completions, and wig delivery status changes.</p>
-                </div>
-            </div>
-            <div class="col-lg-4 col-md-6">
-                <div class="upcoming-card">
-                    <div class="upcoming-icon" style="background: var(--hs-warning-light); color: var(--hs-warning);">
-                        <i class="bi bi-graph-up-arrow"></i>
-                    </div>
-                    <span class="badge-coming-soon mb-2 d-inline-block">Coming Soon</span>
-                    <h5 class="fw-bold mb-2">Advanced Reports</h5>
-                    <p class="text-muted small mb-0">Detailed analytics and reports for NGOs and administrators to track platform impact and operations.</p>
-                </div>
-            </div>
-            <div class="col-lg-4 col-md-6">
-                <div class="upcoming-card">
-                    <div class="upcoming-icon" style="background: var(--hs-danger-light); color: var(--hs-danger);">
-                        <i class="bi bi-robot"></i>
-                    </div>
-                    <span class="badge-coming-soon mb-2 d-inline-block">Coming Soon</span>
-                    <h5 class="fw-bold mb-2">AI Support Assistant</h5>
-                    <p class="text-muted small mb-0">Intelligent chatbot to answer donor queries, guide recipients, and assist with eligibility assessment.</p>
-                </div>
-            </div>
-        </div>
-    </div>
-</section>
-
-<!-- Trust / Impact Section -->
-<section class="trust-section py-5">
-    <div class="container py-4 position-relative">
         <div class="text-center mb-5 reveal">
             <span class="section-badge" style="color: var(--hs-accent-gold);">Trust & Impact</span>
             <h2 class="section-title" style="color: white;">Making a Real Difference</h2>
-            <p class="section-subtitle" style="color: rgba(255,255,255,0.65);">HairSync is committed to transparency, dignity, and connecting people who care with those who need support.</p>
+            <p class="section-subtitle" style="color: rgba(255,255,255,0.75);">HairSync is committed to transparency, dignity, and connecting people who care with those who need support.</p>
         </div>
         <div class="row g-4 text-center reveal-stagger">
             <div class="col-md-3 col-6">
@@ -434,13 +269,10 @@
                 </div>
             </div>
         </div>
-    </div>
-</section>
 
-<!-- Call-to-Action Section -->
-<section class="cta-section py-5">
-    <div class="container py-4 position-relative text-center">
-        <div class="reveal">
+        <hr class="my-5" style="border-color: rgba(255,255,255,0.25); opacity: 1;">
+
+        <div class="text-center reveal">
             <h2 class="display-5 fw-bold mb-3" style="font-family: 'Playfair Display', serif; color: white;">Ready to Make a Difference?</h2>
             <p class="mb-4 mx-auto" style="max-width: 550px; color: rgba(255,255,255,0.85); font-size: 1.1rem;">
                 Join the HairSync community today. Whether you want to donate hair, manage a donation center, or receive a wig — there's a place for you.
@@ -466,63 +298,4 @@
     </div>
 </section>
 
-<!-- Quick Test Accounts Modal for Evaluation -->
-<div class="modal fade" id="demoAccountsModal" tabindex="-1" aria-labelledby="demoAccountsModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content rounded-4 border-0 shadow card-gradient-top">
-            <div class="modal-header border-bottom-0 pb-0 pt-4">
-                <h5 class="modal-title fw-bold" id="demoAccountsModalLabel">
-                    <i class="bi bi-key-fill me-2" style="color: var(--hs-secondary);"></i> Pre-seeded Test Accounts
-                </h5>
-                <button type="button" class="btn-close shadow-none" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-                <p class="small text-muted">Use these credentials to evaluate the platform roles:</p>
-                <div class="table-responsive">
-                    <table class="table table-sm table-bordered align-middle small">
-                        <thead class="table-light">
-                            <tr>
-                                <th>Role</th>
-                                <th>Email</th>
-                                <th>Password</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr>
-                                <td><span class="badge badge-role-admin">Admin</span></td>
-                                <td><code>admin@hairsync.com</code></td>
-                                <td><code>Admin@123</code></td>
-                            </tr>
-                            <tr>
-                                <td><span class="badge badge-role-ngo">Approved NGO</span></td>
-                                <td><code>contact@hopehair.org</code></td>
-                                <td><code>Password@123</code></td>
-                            </tr>
-                            <tr>
-                                <td><span class="badge bg-warning text-dark">Pending NGO</span></td>
-                                <td><code>info@gracecrown.org</code></td>
-                                <td><code>Password@123</code></td>
-                            </tr>
-                            <tr>
-                                <td><span class="badge badge-role-donor">Donor</span></td>
-                                <td><code>donor@example.com</code></td>
-                                <td><code>Password@123</code></td>
-                            </tr>
-                            <tr>
-                                <td><span class="badge badge-role-recipient">Recipient</span></td>
-                                <td><code>recipient@example.com</code></td>
-                                <td><code>Password@123</code></td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-            <div class="modal-footer border-top-0 pt-0">
-                <a href="{{ url_for('auth.login') }}" class="btn btn-hs-primary w-100">
-                    Go to Login Page
-                </a>
-            </div>
-        </div>
-    </div>
-</div>
 {% endblock %}

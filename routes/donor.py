@@ -148,6 +148,43 @@ def donation_centers():
     )
 
 
+# ==========================================================
+# MODULE 7: DONATION CENTER MAP
+# ==========================================================
+
+@donor_bp.route('/map')
+@role_required('donor')
+def map_view():
+    """Interactive Leaflet map showing active donation centers across districts."""
+    district_filter = request.args.get('district', 'all').strip()
+    search_query = request.args.get('q', '').strip()
+
+    centers = DonationCenter.get_active_or_approved(
+        district=district_filter if district_filter.lower() != 'all' else None,
+        search=search_query if search_query else None
+    )
+    districts = DonationCenter.get_distinct_districts()
+
+    # Separate centers with coordinates from fallback centers
+    mapped_centers = []
+    unmapped_centers = []
+    for c in centers:
+        if c.get('latitude') is not None and c.get('longitude') is not None:
+            mapped_centers.append(c)
+        else:
+            unmapped_centers.append(c)
+
+    return render_template(
+        'donor/map.html',
+        centers=centers,
+        mapped_centers=mapped_centers,
+        unmapped_centers=unmapped_centers,
+        districts=districts,
+        district_filter=district_filter,
+        search_query=search_query
+    )
+
+
 @donor_bp.route('/donation-centers/<int:center_id>')
 @role_required('donor')
 def view_center(center_id):

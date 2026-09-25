@@ -18,9 +18,12 @@
                 Browse officially vetted collection hubs managed by our partner non-profit organizations.
             </p>
         </div>
-        <div>
-            <a href="{{ url_for('donor.dashboard') }}" class="btn btn-hs-outline btn-sm">
-                <i class="bi bi-arrow-left me-1"></i> Back to Dashboard
+        <div class="d-flex gap-2">
+            <a href="{{ url_for('donor.map_view') }}" class="btn btn-hs-primary btn-sm rounded-pill px-3">
+                <i class="bi bi-map me-1"></i> Interactive Map View
+            </a>
+            <a href="{{ url_for('donor.dashboard') }}" class="btn btn-hs-outline btn-sm rounded-pill px-3">
+                <i class="bi bi-arrow-left me-1"></i> Dashboard
             </a>
         </div>
     </div>

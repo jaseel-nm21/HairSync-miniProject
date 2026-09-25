@@ -14,14 +14,20 @@
             <h2 class="fw-bold mb-0">Platform Administration Dashboard</h2>
         </div>
         <div class="d-flex flex-wrap gap-2">
-            <a href="{{ url_for('admin.ngos') }}" class="btn btn-hs-outline btn-sm">
-                <i class="bi bi-building-check me-1"></i> Partner NGOs
+            <a href="{{ url_for('admin.reports') }}" class="btn btn-outline-secondary btn-sm rounded-pill px-3">
+                <i class="bi bi-graph-up me-1"></i> Reports
             </a>
-            <a href="{{ url_for('admin.donation_centers') }}" class="btn btn-hs-secondary btn-sm">
-                <i class="bi bi-geo-alt me-1"></i> Donation Centers
+            <a href="{{ url_for('admin.wig_requests') }}" class="btn btn-outline-primary btn-sm rounded-pill px-3">
+                <i class="bi bi-box2-heart me-1"></i> Wig Requests
             </a>
-            <a href="{{ url_for('admin.users') }}" class="btn btn-hs-primary btn-sm">
-                <i class="bi bi-people me-1"></i> All Users
+            <a href="{{ url_for('admin.ngos') }}" class="btn btn-hs-outline btn-sm rounded-pill px-3">
+                <i class="bi bi-building-check me-1"></i> NGOs
+            </a>
+            <a href="{{ url_for('admin.donation_centers') }}" class="btn btn-hs-secondary btn-sm rounded-pill px-3">
+                <i class="bi bi-geo-alt me-1"></i> Centers
+            </a>
+            <a href="{{ url_for('admin.users') }}" class="btn btn-hs-primary btn-sm rounded-pill px-3">
+                <i class="bi bi-people me-1"></i> Users
             </a>
         </div>
     </div>

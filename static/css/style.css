@@ -362,22 +362,31 @@ a:hover {
    Hero Section
    ========================================================================== */
 .hero-section {
-    background: linear-gradient(165deg, var(--hs-accent-cream) 0%, #f5f0e8 30%, var(--hs-accent-mint) 70%, var(--hs-primary-light) 100%);
-    padding: 5rem 0 4.5rem;
+    background-image: url('../images/hero.png'), linear-gradient(165deg, var(--hs-accent-cream) 0%, #f5f0e8 30%, var(--hs-accent-mint) 70%, var(--hs-primary-light) 100%);
+    background-size: cover;
+    background-position: center center;
+    background-repeat: no-repeat;
+    padding: 4.5rem 0 4rem;
+    /* Tall enough to show the illustration at its full height (image is 1983x793 ≈ 40vw) */
+    min-height: max(40vw, 640px);
+    display: flex;
+    align-items: center;
     position: relative;
     overflow: hidden;
     border-bottom: none;
 }
 
+.hero-section > .container {
+    width: 100%;
+}
+
+/* Gentle light pool on the left for text contrast — fades to nothing
+   before the centre, so the artwork stays full strength */
 .hero-section::before {
     content: '';
     position: absolute;
-    top: -10%;
-    right: -5%;
-    width: 500px;
-    height: 500px;
-    background: radial-gradient(circle, rgba(var(--hs-secondary-rgb), 0.08) 0%, transparent 70%);
-    border-radius: 50%;
+    inset: 0;
+    background: linear-gradient(90deg, rgba(253, 248, 240, 0.6) 0%, rgba(253, 248, 240, 0.36) 28%, rgba(253, 248, 240, 0.1) 52%, rgba(253, 248, 240, 0) 70%);
     pointer-events: none;
 }
 
@@ -415,6 +424,8 @@ a:hover {
     font-weight: 800;
     margin-bottom: 1.25rem;
     color: var(--hs-dark);
+    /* Cream halo so the title reads over the illustration without covering it */
+    filter: drop-shadow(0 1px 2px rgba(253, 248, 240, 0.95)) drop-shadow(0 0 12px rgba(253, 248, 240, 0.9)) drop-shadow(0 0 28px rgba(253, 248, 240, 0.75));
 }
 
 .hero-title .text-gradient {
@@ -426,31 +437,20 @@ a:hover {
 
 .hero-subtitle {
     font-size: 1.1rem;
-    color: var(--hs-muted);
+    color: var(--hs-dark);
     max-width: 540px;
     margin-bottom: 2rem;
     line-height: 1.7;
+    text-shadow: 0 1px 2px rgba(253, 248, 240, 0.95), 0 0 10px rgba(253, 248, 240, 0.9), 0 0 24px rgba(253, 248, 240, 0.8);
 }
 
-/* Hero Visual Card */
-.hero-visual-card {
-    background: white;
-    border-radius: var(--hs-radius-xl);
-    padding: 2rem;
-    box-shadow: var(--hs-shadow-xl);
-    border: 1px solid rgba(var(--hs-primary-rgb), 0.08);
-    position: relative;
-    overflow: hidden;
-}
-
-.hero-visual-card::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    height: 4px;
-    background: linear-gradient(90deg, var(--hs-primary), var(--hs-accent-teal), var(--hs-secondary));
+/* Hero outline/ghost buttons get a translucent cream fill so their labels
+   stay readable over the artwork */
+.hero-section .btn-hs-outline,
+.hero-section .btn-hs-ghost {
+    background: rgba(253, 248, 240, 0.72);
+    backdrop-filter: blur(3px);
+    -webkit-backdrop-filter: blur(3px);
 }
 
 /* Quick Highlight Stats */
@@ -539,7 +539,54 @@ a:hover {
     color: var(--hs-dark-soft);
 }
 
-/* Feature Cards (How It Works, Upcoming) */
+/* Role card photo banner */
+.role-card-img {
+    width: 100%;
+    height: 260px;
+    object-fit: cover;
+    object-position: center top;
+    display: block;
+}
+
+/* ==========================================================================
+   Homepage Section Backdrops
+   ========================================================================== */
+/* Role / Community Section — leafy canopy backdrop */
+.section-roles {
+    background:
+        linear-gradient(rgba(255, 255, 255, 0.6), rgba(255, 255, 255, 0.6)),
+        url('../images/section-roles-bg.png') center center / cover no-repeat;
+}
+
+/* How It Works Section — pastel lake backdrop */
+.section-process {
+    background:
+        linear-gradient(rgba(255, 255, 255, 0.55), rgba(255, 255, 255, 0.55)),
+        url('../images/section-process-bg.png') center center / cover no-repeat;
+}
+
+/* ==========================================================================
+   About / Mission Section
+   ========================================================================== */
+.about-section {
+    background-image: url('../images/about-bg.png');
+    background-size: cover;
+    background-position: center center;
+    background-repeat: no-repeat;
+    position: relative;
+    overflow: hidden;
+}
+
+/* Soft white veil so text stays readable over the sky background */
+.about-section::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: rgba(255, 255, 255, 0.55);
+    pointer-events: none;
+}
+
+/* Feature Cards (How It Works) */
 .feature-card {
     background: white;
     border-radius: var(--hs-radius-lg);
@@ -605,59 +652,6 @@ a:hover {
     justify-content: center;
     margin-bottom: 1rem;
     box-shadow: 0 4px 12px rgba(var(--hs-primary-rgb), 0.25);
-}
-
-/* Upcoming / Coming Soon Cards */
-.upcoming-card {
-    background: white;
-    border-radius: var(--hs-radius-lg);
-    padding: 1.75rem;
-    border: 1px solid var(--hs-border-light);
-    box-shadow: var(--hs-shadow-xs);
-    transition: var(--hs-transition);
-    position: relative;
-    overflow: hidden;
-    height: 100%;
-}
-
-.upcoming-card::after {
-    content: '';
-    position: absolute;
-    top: 0;
-    right: 0;
-    width: 80px;
-    height: 80px;
-    background: radial-gradient(circle at top right, rgba(var(--hs-primary-rgb), 0.04) 0%, transparent 70%);
-    pointer-events: none;
-}
-
-.upcoming-card:hover {
-    transform: translateY(-4px);
-    box-shadow: var(--hs-shadow-md);
-    border-color: rgba(var(--hs-secondary-rgb), 0.2);
-}
-
-.upcoming-icon {
-    width: 52px;
-    height: 52px;
-    border-radius: var(--hs-radius);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 1.4rem;
-    margin-bottom: 1rem;
-}
-
-.badge-coming-soon {
-    background: var(--hs-secondary-light);
-    color: var(--hs-secondary);
-    font-family: 'Outfit', sans-serif;
-    font-weight: 600;
-    font-size: 0.7rem;
-    padding: 0.3rem 0.7rem;
-    border-radius: var(--hs-radius-pill);
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
 }
 
 /* ==========================================================================
@@ -985,23 +979,14 @@ a:hover {
    Sections (Homepage specific)
    ========================================================================== */
 
-/* Trust / Impact Section */
+/* Trust / Impact + CTA Section (combined, foliage backdrop) */
 .trust-section {
-    background: var(--hs-primary-dark);
+    background:
+        linear-gradient(rgba(15, 61, 43, 0.82), rgba(15, 61, 43, 0.82)),
+        url('../images/section-impact-bg.png') center center / cover no-repeat;
     color: white;
     position: relative;
     overflow: hidden;
-}
-
-.trust-section::before {
-    content: '';
-    position: absolute;
-    top: -50%;
-    right: -20%;
-    width: 500px;
-    height: 500px;
-    background: radial-gradient(circle, rgba(var(--hs-secondary-rgb), 0.1) 0%, transparent 70%);
-    border-radius: 50%;
 }
 
 .trust-stat {
@@ -1022,36 +1007,6 @@ a:hover {
     font-size: 0.9rem;
     color: rgba(255, 255, 255, 0.7);
     font-weight: 500;
-}
-
-/* CTA Section */
-.cta-section {
-    background: linear-gradient(135deg, var(--hs-primary) 0%, var(--hs-accent-teal) 50%, #1a7f5e 100%);
-    color: white;
-    position: relative;
-    overflow: hidden;
-}
-
-.cta-section::before {
-    content: '';
-    position: absolute;
-    top: -30%;
-    left: -10%;
-    width: 400px;
-    height: 400px;
-    background: radial-gradient(circle, rgba(255, 255, 255, 0.06) 0%, transparent 70%);
-    border-radius: 50%;
-}
-
-.cta-section::after {
-    content: '';
-    position: absolute;
-    bottom: -20%;
-    right: -5%;
-    width: 350px;
-    height: 350px;
-    background: radial-gradient(circle, rgba(var(--hs-secondary-rgb), 0.12) 0%, transparent 70%);
-    border-radius: 50%;
 }
 
 /* ==========================================================================
@@ -1178,6 +1133,18 @@ a:hover {
 @media (max-width: 768px) {
     .hero-section {
         padding: 3.5rem 0 3rem;
+        min-height: 0;
+    }
+    /* Cream veil only on small screens — text stacks over the busy artwork there */
+    .hero-section::before {
+        content: '';
+        position: absolute;
+        inset: 0;
+        background: rgba(253, 248, 240, 0.75);
+        pointer-events: none;
+    }
+    .about-section::before {
+        background: rgba(255, 255, 255, 0.72);
     }
     .hero-title {
         font-size: 2.25rem;
@@ -1214,9 +1181,6 @@ a:hover {
     }
     .hero-section {
         padding: 2.5rem 0 2rem;
-    }
-    .cta-section {
-        padding: 3rem 0;
     }
 }
 
