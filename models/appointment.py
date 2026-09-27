@@ -138,7 +138,7 @@ class Appointment:
             sql += " AND dc.district = %s"
             params.append(district)
         sql += " ORDER BY a.appointment_date DESC, a.appointment_time DESC"
-        return query_db(sql, tuple(params) if params else None)
+        return query_db(sql, tuple(params))
 
     @classmethod
     def update_status(cls, appointment_id, new_status, ngo_notes=None):

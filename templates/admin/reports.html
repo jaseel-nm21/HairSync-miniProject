@@ -1,0 +1,255 @@
+{% extends "base.html" %}
+
+{% block title %}Platform Impact & Operational Reports - Admin - HairSync{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <!-- Header -->
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
+        <div>
+            <div class="d-flex align-items-center gap-2 mb-1">
+                <span class="badge badge-role-admin px-2 py-1 text-uppercase">Platform Intelligence</span>
+                <span class="text-muted small">Analytical Reports &amp; Ledger</span>
+            </div>
+            <h2 class="fw-bold mb-0">Platform Impact &amp; Operational Reports</h2>
+            <p class="text-muted small mb-0">Data-driven insights into hair donation volumes, NGO collection performance, and recipient wig fulfillment.</p>
+        </div>
+        <div class="d-flex gap-2">
+            <button onclick="window.print()" class="btn btn-outline-secondary btn-sm rounded-pill px-3">
+                <i class="bi bi-printer me-1"></i> Print Report
+            </button>
+            <a href="{{ url_for('admin.dashboard') }}" class="btn btn-hs-outline btn-sm rounded-pill px-3">
+                <i class="bi bi-arrow-left me-1"></i> Dashboard
+            </a>
+        </div>
+    </div>
+
+    <!-- Core Impact Highlights -->
+    <div class="row g-3 mb-4">
+        <div class="col-sm-6 col-lg-3">
+            <div class="card border-0 shadow-sm rounded-4 p-3 bg-white">
+                <div class="d-flex align-items-center justify-content-between">
+                    <div>
+                        <div class="text-muted small fw-semibold text-uppercase">Hair Donated</div>
+                        <h3 class="fw-bold mb-0 text-success">{{ summary_stats.total_donated_length }} <span class="fs-6 text-muted">cm</span></h3>
+                        <small class="text-muted">{{ summary_stats.total_donations }} donation batches</small>
+                    </div>
+                    <div class="stat-icon icon-donor">
+                        <i class="bi bi-scissors"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-sm-6 col-lg-3">
+            <div class="card border-0 shadow-sm rounded-4 p-3 bg-white">
+                <div class="d-flex align-items-center justify-content-between">
+                    <div>
+                        <div class="text-muted small fw-semibold text-uppercase">Wigs Delivered</div>
+                        <h3 class="fw-bold mb-0 text-primary">{{ summary_stats.delivered_wigs }}</h3>
+                        <small class="text-muted">of {{ summary_stats.total_requests }} total requests</small>
+                    </div>
+                    <div class="stat-icon" style="background: var(--hs-secondary-light); color: var(--hs-secondary);">
+                        <i class="bi bi-house-check-fill"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-sm-6 col-lg-3">
+            <div class="card border-0 shadow-sm rounded-4 p-3 bg-white">
+                <div class="d-flex align-items-center justify-content-between">
+                    <div>
+                        <div class="text-muted small fw-semibold text-uppercase">Active Centers</div>
+                        <h3 class="fw-bold mb-0" style="color: #0f766e;">{{ summary_stats.total_centers }}</h3>
+                        <small class="text-muted">Managed by {{ summary_stats.total_ngos }} verified NGOs</small>
+                    </div>
+                    <div class="stat-icon icon-ngo">
+                        <i class="bi bi-geo-alt-fill"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-sm-6 col-lg-3">
+            <div class="card border-0 shadow-sm rounded-4 p-3 bg-white">
+                <div class="d-flex align-items-center justify-content-between">
+                    <div>
+                        <div class="text-muted small fw-semibold text-uppercase">Total Users</div>
+                        <h3 class="fw-bold mb-0 text-dark">{{ summary_stats.total_users }}</h3>
+                        <small class="text-muted">{{ summary_stats.total_donors }} Donors &bull; {{ summary_stats.total_recipients }} Recipients</small>
+                    </div>
+                    <div class="stat-icon bg-light text-dark">
+                        <i class="bi bi-people-fill"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Section 1: NGO Impact Matrix -->
+    <div class="card border-0 shadow-sm rounded-4 overflow-hidden mb-4">
+        <div class="card-header bg-white py-3 px-4 border-bottom d-flex justify-content-between align-items-center">
+            <h5 class="fw-bold mb-0"><i class="bi bi-building-check text-primary me-2"></i> Partner NGO Performance &amp; Collection Matrix</h5>
+            <span class="badge bg-light text-dark border">{{ ngo_contributions|length }} organization(s)</span>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th class="ps-4">Organization Name</th>
+                            <th>District</th>
+                            <th>Approval</th>
+                            <th class="text-center">Donation Centers</th>
+                            <th class="text-center">Fulfillments</th>
+                            <th class="text-center">Hair Collected (cm)</th>
+                            <th class="text-center">Wig Requests Handled</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for ngo in ngo_contributions %}
+                            <tr>
+                                <td class="ps-4">
+                                    <strong class="text-dark">{{ ngo.organization_name }}</strong>
+                                </td>
+                                <td>{{ ngo.district }}</td>
+                                <td>
+                                    {% if ngo.approval_status == 'approved' %}
+                                        <span class="badge bg-success-subtle text-success border border-success-subtle">Approved</span>
+                                    {% elif ngo.approval_status == 'pending' %}
+                                        <span class="badge bg-warning-subtle text-warning border border-warning-subtle">Pending</span>
+                                    {% else %}
+                                        <span class="badge bg-secondary-subtle text-secondary border">{{ ngo.approval_status }}</span>
+                                    {% endif %}
+                                </td>
+                                <td class="text-center fw-semibold">{{ ngo.center_count }}</td>
+                                <td class="text-center fw-bold text-success">{{ ngo.donation_count }}</td>
+                                <td class="text-center fw-bold text-dark">{{ ngo.total_hair_donated }} cm</td>
+                                <td class="text-center fw-semibold text-primary">{{ ngo.assigned_requests }}</td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-4 mb-4">
+        <!-- Section 2: Monthly Hair Donation Trends -->
+        <div class="col-lg-6">
+            <div class="card border-0 shadow-sm rounded-4 h-100 overflow-hidden">
+                <div class="card-header bg-white py-3 px-4 border-bottom">
+                    <h5 class="fw-bold mb-0"><i class="bi bi-calendar-month text-primary me-2"></i> Monthly Donations Volume</h5>
+                </div>
+                <div class="card-body p-0">
+                    {% if donations_by_month %}
+                        <div class="table-responsive">
+                            <table class="table table-hover align-middle mb-0">
+                                <thead class="table-light small">
+                                    <tr>
+                                        <th class="ps-4">Month / Period</th>
+                                        <th class="text-center">Total Donations</th>
+                                        <th class="text-end pe-4">Total Length (cm)</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for m in donations_by_month %}
+                                        <tr>
+                                            <td class="ps-4 fw-semibold text-dark">{{ m.period }}</td>
+                                            <td class="text-center">
+                                                <span class="badge bg-success-subtle text-success border border-success-subtle px-2 py-1">
+                                                    {{ m.total_donations }} donation(s)
+                                                </span>
+                                            </td>
+                                            <td class="text-end pe-4 fw-bold text-dark">{{ m.total_length }} cm</td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <div class="text-center py-4 text-muted small">No monthly donation history logged yet.</div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Section 3: Distribution by District -->
+        <div class="col-lg-6">
+            <div class="card border-0 shadow-sm rounded-4 h-100 overflow-hidden">
+                <div class="card-header bg-white py-3 px-4 border-bottom">
+                    <h5 class="fw-bold mb-0"><i class="bi bi-geo-alt-fill text-danger me-2"></i> Regional Centers Distribution</h5>
+                </div>
+                <div class="card-body p-0">
+                    {% if district_centers %}
+                        <div class="table-responsive">
+                            <table class="table table-hover align-middle mb-0">
+                                <thead class="table-light small">
+                                    <tr>
+                                        <th class="ps-4">District</th>
+                                        <th class="text-center">Total Centers</th>
+                                        <th class="text-end pe-4">Active &amp; Approved</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for dc in district_centers %}
+                                        <tr>
+                                            <td class="ps-4 fw-semibold text-dark">{{ dc.district }}</td>
+                                            <td class="text-center">{{ dc.total_centers }}</td>
+                                            <td class="text-end pe-4">
+                                                <span class="badge bg-success-subtle text-success border border-success-subtle">
+                                                    {{ dc.active_centers }} Active
+                                                </span>
+                                            </td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <div class="text-center py-4 text-muted small">No district center records available.</div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Section 4: Operational Status Distributions -->
+    <div class="row g-4 mb-4">
+        <!-- Appointment Status Distribution -->
+        <div class="col-md-6">
+            <div class="card border-0 shadow-sm rounded-4 p-4 bg-white h-100">
+                <h6 class="fw-bold mb-3 pb-2 border-bottom text-dark">
+                    <i class="bi bi-calendar-check text-primary me-2"></i> Appointments by Status
+                </h6>
+                <div class="d-flex flex-column gap-2">
+                    {% for appt in appointment_stats %}
+                        <div class="d-flex justify-content-between align-items-center p-2 rounded-2 bg-light">
+                            <span class="fw-semibold text-dark">{{ appt.status }}</span>
+                            <span class="badge bg-primary rounded-pill px-3 py-1">{{ appt.count }}</span>
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Wig Requests Status Distribution -->
+        <div class="col-md-6">
+            <div class="card border-0 shadow-sm rounded-4 p-4 bg-white h-100">
+                <h6 class="fw-bold mb-3 pb-2 border-bottom text-dark">
+                    <i class="bi bi-box2-heart text-secondary me-2"></i> Wig Requests by Status
+                </h6>
+                <div class="d-flex flex-column gap-2">
+                    {% for req in request_stats %}
+                        <div class="d-flex justify-content-between align-items-center p-2 rounded-2 bg-light">
+                            <span class="fw-semibold text-dark">{{ req.status }}</span>
+                            <span class="badge bg-success rounded-pill px-3 py-1">{{ req.count }}</span>
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

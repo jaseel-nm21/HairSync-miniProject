@@ -8,6 +8,10 @@ PRAGMA foreign_keys = ON;
 
 -- 1. USERS TABLE
 -- Stores credentials and user role information
+DROP TABLE IF EXISTS wig_tracking_logs;
+DROP TABLE IF EXISTS wig_requests;
+DROP TABLE IF EXISTS wigs;
+DROP TABLE IF EXISTS hair_inventory;
 DROP TABLE IF EXISTS donations;
 DROP TABLE IF EXISTS appointments;
 DROP TABLE IF EXISTS donation_guidelines;
@@ -192,6 +196,104 @@ CREATE INDEX IF NOT EXISTS idx_don_date ON donations(donation_date);
 
 
 -- ==========================================================
+-- MODULE 4: HAIR & WIG INVENTORY MANAGEMENT
+-- ==========================================================
+
+-- 9. HAIR INVENTORY TABLE
+CREATE TABLE IF NOT EXISTS hair_inventory (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    ngo_id INTEGER NOT NULL,
+    donation_id INTEGER UNIQUE DEFAULT NULL,
+    hair_type TEXT NOT NULL,
+    hair_length REAL NOT NULL,
+    hair_condition TEXT NOT NULL,
+    quantity_or_weight TEXT DEFAULT NULL,
+    status TEXT NOT NULL DEFAULT 'In Stock' CHECK(status IN ('In Stock', 'In Processing', 'Used in Wig', 'Disposed')),
+    notes TEXT DEFAULT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (ngo_id) REFERENCES ngo_profiles (id) ON DELETE CASCADE,
+    FOREIGN KEY (donation_id) REFERENCES donations (id) ON DELETE SET NULL
+);
+
+CREATE INDEX IF NOT EXISTS idx_hi_ngo ON hair_inventory(ngo_id);
+CREATE INDEX IF NOT EXISTS idx_hi_status ON hair_inventory(status);
+
+-- 10. WIGS INVENTORY TABLE
+CREATE TABLE IF NOT EXISTS wigs (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    ngo_id INTEGER NOT NULL,
+    wig_type TEXT NOT NULL,
+    hair_source TEXT NOT NULL DEFAULT 'Natural' CHECK(hair_source IN ('Natural', 'Synthetic', 'Blend')),
+    hair_color TEXT NOT NULL,
+    hair_length REAL NOT NULL,
+    size TEXT NOT NULL DEFAULT 'Medium' CHECK(size IN ('Small', 'Medium', 'Large', 'Adjustable')),
+    condition TEXT NOT NULL DEFAULT 'New / Sanitized',
+    status TEXT NOT NULL DEFAULT 'Available' CHECK(status IN ('Available', 'Assigned', 'In Preparation', 'Dispatched', 'Delivered')),
+    notes TEXT DEFAULT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (ngo_id) REFERENCES ngo_profiles (id) ON DELETE CASCADE
+);
+
+CREATE INDEX IF NOT EXISTS idx_wig_ngo ON wigs(ngo_id);
+CREATE INDEX IF NOT EXISTS idx_wig_status ON wigs(status);
+
+
+-- ==========================================================
+-- MODULE 5 & 6: RECIPIENT WIG REQUESTS & STATUS TRACKING
+-- ==========================================================
+
+-- 11. WIG REQUESTS TABLE
+CREATE TABLE IF NOT EXISTS wig_requests (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    recipient_id INTEGER NOT NULL,
+    ngo_id INTEGER DEFAULT NULL,
+    assigned_wig_id INTEGER UNIQUE DEFAULT NULL,
+    preferred_wig_type TEXT NOT NULL,
+    hair_source TEXT NOT NULL DEFAULT 'Natural',
+    preferred_length REAL NOT NULL,
+    preferred_color TEXT NOT NULL,
+    preferred_size TEXT NOT NULL DEFAULT 'Medium',
+    reason_for_request TEXT NOT NULL,
+    delivery_address TEXT NOT NULL,
+    delivery_city TEXT NOT NULL,
+    delivery_district TEXT NOT NULL,
+    delivery_pincode TEXT NOT NULL,
+    contact_phone TEXT NOT NULL,
+    additional_notes TEXT DEFAULT NULL,
+    status TEXT NOT NULL DEFAULT 'Submitted' CHECK(status IN ('Submitted', 'Under Review', 'Approved', 'Rejected', 'Wig Assigned', 'Preparing', 'Ready for Dispatch', 'Dispatched', 'In Transit', 'Out for Delivery', 'Delivered')),
+    rejection_reason TEXT DEFAULT NULL,
+    tracking_number TEXT DEFAULT NULL,
+    courier_service TEXT DEFAULT NULL,
+    estimated_delivery_date TEXT DEFAULT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (recipient_id) REFERENCES recipient_profiles (id) ON DELETE CASCADE,
+    FOREIGN KEY (ngo_id) REFERENCES ngo_profiles (id) ON DELETE SET NULL,
+    FOREIGN KEY (assigned_wig_id) REFERENCES wigs (id) ON DELETE SET NULL
+);
+
+CREATE INDEX IF NOT EXISTS idx_wr_recipient ON wig_requests(recipient_id);
+CREATE INDEX IF NOT EXISTS idx_wr_ngo ON wig_requests(ngo_id);
+CREATE INDEX IF NOT EXISTS idx_wr_status ON wig_requests(status);
+
+-- 12. WIG TRACKING LOGS TABLE
+CREATE TABLE IF NOT EXISTS wig_tracking_logs (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    wig_request_id INTEGER NOT NULL,
+    status TEXT NOT NULL,
+    remarks TEXT DEFAULT NULL,
+    updated_by_user_id INTEGER DEFAULT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (wig_request_id) REFERENCES wig_requests (id) ON DELETE CASCADE,
+    FOREIGN KEY (updated_by_user_id) REFERENCES users (id) ON DELETE SET NULL
+);
+
+CREATE INDEX IF NOT EXISTS idx_wtl_request ON wig_tracking_logs(wig_request_id);
+
+
+-- ==========================================================
 -- INITIAL SAMPLE DATA & DEFAULT SEEDS
 -- Default accounts:
 -- 1. Admin     : admin@hairsync.com      / Admin@123
@@ -241,4 +343,24 @@ INSERT INTO donation_centers (id, ngo_id, center_name, address, district, city, 
 -- 7. Sample Donation Guidelines for Hope Hair Foundation (ngo_id = 1)
 INSERT INTO donation_guidelines (id, ngo_id, minimum_hair_length, allowed_hair_types, allow_colored_hair, allow_chemically_treated, allow_bleached_hair, minimum_condition, additional_requirements) VALUES
 (1, 1, 20.0, 'Straight,Wavy,Curly,Coily', 'Requires Review', 'Not Allowed', 'Not Allowed', 'Clean, dry, washed within 24 hours, tied in ponytail or braid at both ends', 'Layered hair is accepted if longest layer meets minimum length. Gray hair is welcome.');
+
+-- 8. Sample Hair Inventory for Hope Hair Foundation (ngo_id = 1)
+INSERT INTO hair_inventory (id, ngo_id, donation_id, hair_type, hair_length, hair_condition, quantity_or_weight, status, notes) VALUES
+(1, 1, NULL, 'Straight', 32.0, 'Virgin / Untreated', '180 grams', 'In Stock', 'Sanitized high-grade straight hair bundle suitable for medium wigs.'),
+(2, 1, NULL, 'Wavy', 28.5, 'Virgin / Untreated', '150 grams', 'In Processing', 'Currently in sorting and sanitization process.');
+
+-- 9. Sample Wigs Inventory for Hope Hair Foundation (ngo_id = 1)
+INSERT INTO wigs (id, ngo_id, wig_type, hair_source, hair_color, hair_length, size, condition, status, notes) VALUES
+(1, 1, 'Medium Wavy Crown', 'Natural', 'Natural Dark Brown', 30.0, 'Medium', 'New / Sanitized', 'Available', '100% natural human hair wig with breathable lightweight cap, designed for sensitive scalps.'),
+(2, 1, 'Short Classic Bob', 'Natural', 'Natural Jet Black', 22.0, 'Small', 'New / Sanitized', 'Available', 'Crafted for pediatric cancer patients or small head circumference, soft perimeter tape.');
+
+-- 10. Sample Wig Request from Meera Nair (recipient_id = 1)
+INSERT INTO wig_requests (id, recipient_id, ngo_id, assigned_wig_id, preferred_wig_type, hair_source, preferred_length, preferred_color, preferred_size, reason_for_request, delivery_address, delivery_city, delivery_district, delivery_pincode, contact_phone, additional_notes, status) VALUES
+(1, 1, 1, NULL, 'Medium Wavy Crown', 'Natural', 30.0, 'Natural Dark Brown', 'Medium', 'Undergoing chemotherapy for breast cancer; seeking natural wig for emotional well-being.', 'House No 23, Rose Gardens, Kowdiar', 'Thiruvananthapuram', 'Thiruvananthapuram', '695003', '+91 9988776655', 'Prefer lightweight inner mesh if possible.', 'Under Review');
+
+-- 11. Sample Wig Tracking Logs for Request #1
+INSERT INTO wig_tracking_logs (wig_request_id, status, remarks, updated_by_user_id) VALUES
+(1, 'Submitted', 'Recipient submitted request for natural-hair wig.', 5),
+(1, 'Under Review', 'Application received and currently under medical verification by Hope Hair Foundation.', 2);
+
 

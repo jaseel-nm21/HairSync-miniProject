@@ -85,3 +85,11 @@ class User:
             counts[role] = row['count']
             counts['total'] += row['count']
         return counts
+
+    @staticmethod
+    def count():
+        """Returns total count of users."""
+        sql = "SELECT COUNT(*) as count FROM users"
+        res = query_db(sql, one=True)
+        return res['count'] if res else 0
+

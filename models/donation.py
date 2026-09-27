@@ -126,7 +126,7 @@ class Donation:
             sql += " AND dc.district = %s"
             params.append(district)
         sql += " ORDER BY d.donation_date DESC, d.created_at DESC"
-        return query_db(sql, tuple(params) if params else None)
+        return query_db(sql, tuple(params))
 
     @staticmethod
     def count_by_donor(donor_id):

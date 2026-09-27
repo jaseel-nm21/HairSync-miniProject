@@ -13,6 +13,9 @@ from models.recipient import Recipient
 from models.donation_center import DonationCenter
 from models.appointment import Appointment
 from models.donation import Donation
+from models.inventory import HairInventory, Wig
+from models.wig_request import WigRequest
+from database.db import query_db
 
 admin_bp = Blueprint('admin', __name__, url_prefix='/admin')
 
@@ -35,6 +38,11 @@ def dashboard():
     appt_counts = Appointment.count_all()
     don_counts = Donation.count_all()
 
+    # Module 5 & 6 Metrics: Wig requests & Inventory
+    wig_req_counts = WigRequest.count_all()
+    wig_counts = Wig.count_all()
+    recent_requests = WigRequest.get_all()[:5]
+
     return render_template(
         'admin/dashboard.html',
         counts=role_counts,
@@ -46,7 +54,10 @@ def dashboard():
         center_counts=center_counts,
         recent_centers=recent_centers,
         appt_counts=appt_counts,
-        don_counts=don_counts
+        don_counts=don_counts,
+        wig_req_counts=wig_req_counts,
+        wig_counts=wig_counts,
+        recent_requests=recent_requests
     )
 
 
@@ -281,5 +292,124 @@ def donations():
         district_filter=district_filter or 'all',
         districts=districts
     )
+
+
+# ==========================================================
+# MODULE 5 & 6: ADMIN WIG REQUESTS AUDIT
+# ==========================================================
+
+@admin_bp.route('/wig-requests')
+@role_required('admin')
+def wig_requests():
+    """System-wide wig requests monitoring, allocation auditing, and status tracking."""
+    status_filter = request.args.get('status', 'all').strip()
+    district_filter = request.args.get('district', 'all').strip()
+
+    if status_filter not in WigRequest.VALID_STATUSES:
+        status_filter = 'all'
+    if district_filter.lower() == 'all':
+        district_filter = None
+
+    requests_list = WigRequest.get_all(
+        status=status_filter if status_filter != 'all' else None,
+        district=district_filter
+    )
+    counts = WigRequest.count_all()
+    districts = DonationCenter.get_distinct_districts()
+
+    return render_template(
+        'admin/wig_requests.html',
+        requests=requests_list,
+        counts=counts,
+        status_filter=status_filter,
+        district_filter=district_filter or 'all',
+        districts=districts
+    )
+
+
+# ==========================================================
+# MODULE 8: ADMIN REPORTS & PLATFORM IMPACT ANALYTICS
+# ==========================================================
+
+@admin_bp.route('/reports')
+@role_required('admin')
+def reports():
+    """Platform-wide statistical reports, volume metrics, and impact ledger."""
+    # 1. Donations by Month
+    donations_by_month = query_db("""
+        SELECT strftime('%Y-%m', donation_date) as period,
+               COUNT(*) as total_donations,
+               ROUND(SUM(hair_length), 1) as total_length
+        FROM donations
+        GROUP BY period
+        ORDER BY period DESC
+        LIMIT 12
+    """)
+
+    # 2. NGO-wise Contributions & Centers
+    ngo_contributions = query_db("""
+        SELECT np.id, np.organization_name, np.district, np.approval_status,
+               COUNT(DISTINCT dc.id) as center_count,
+               COUNT(DISTINCT d.id) as donation_count,
+               ROUND(COALESCE(SUM(d.hair_length), 0), 1) as total_hair_donated,
+               COUNT(DISTINCT wr.id) as assigned_requests
+        FROM ngo_profiles np
+        LEFT JOIN donation_centers dc ON np.id = dc.ngo_id
+        LEFT JOIN donations d ON np.id = d.ngo_id
+        LEFT JOIN wig_requests wr ON np.id = wr.ngo_id
+        GROUP BY np.id
+        ORDER BY donation_count DESC, np.organization_name ASC
+    """)
+
+    # 3. Appointment Status Distribution
+    appointment_stats = query_db("""
+        SELECT status, COUNT(*) as count
+        FROM appointments
+        GROUP BY status
+        ORDER BY count DESC
+    """)
+
+    # 4. Wig Request Status Distribution
+    request_stats = query_db("""
+        SELECT status, COUNT(*) as count
+        FROM wig_requests
+        GROUP BY status
+        ORDER BY count DESC
+    """)
+
+    # 5. Centers Distribution by District
+    district_centers = query_db("""
+        SELECT district, COUNT(*) as total_centers,
+               SUM(CASE WHEN status IN ('Active', 'Approved') THEN 1 ELSE 0 END) as active_centers
+        FROM donation_centers
+        GROUP BY district
+        ORDER BY total_centers DESC
+    """)
+
+    # 6. Overall Metrics
+    summary_stats = {
+        'total_users': User.count(),
+        'total_donors': Donor.count(),
+        'total_ngos': NGO.count(),
+        'total_recipients': Recipient.count(),
+        'total_centers': DonationCenter.count(),
+        'total_appointments': Appointment.count_all()['total'],
+        'total_donations': Donation.count_all()['count'],
+        'total_donated_length': Donation.count_all()['total_length'],
+        'total_wigs': Wig.count_all()['total_wigs'],
+        'total_requests': WigRequest.count_all()['total'],
+        'delivered_wigs': WigRequest.count_all()['delivered']
+    }
+
+    return render_template(
+        'admin/reports.html',
+        donations_by_month=donations_by_month,
+        ngo_contributions=ngo_contributions,
+        appointment_stats=appointment_stats,
+        request_stats=request_stats,
+        district_centers=district_centers,
+        summary_stats=summary_stats
+    )
+
 
 

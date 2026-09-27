@@ -80,6 +80,8 @@ def query_db(query, args=(), one=False):
     :param one: If True, returns a single dictionary row or None
     :return: List of dicts or single dict
     """
+    if args is None:
+        args = ()
     db = get_db()
     cursor = db.cursor()
     try:
@@ -99,6 +101,8 @@ def execute_db(query, args=(), commit=True):
     :param commit: If True, commits the transaction immediately
     :return: dict with 'lastrowid' and 'rowcount'
     """
+    if args is None:
+        args = ()
     db = get_db()
     cursor = db.cursor()
     try:

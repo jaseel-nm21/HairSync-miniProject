@@ -74,12 +74,22 @@
                             </li>
                             <li class="nav-item">
                                 <a class="nav-link" href="{{ url_for('admin.appointments') }}" id="navAdminAppointments">
-                                    <i class="bi bi-calendar-event me-1"></i> Appointments
+                                    <i class="bi bi-calendar-event me-1"></i> Appts
                                 </a>
                             </li>
                             <li class="nav-item">
                                 <a class="nav-link" href="{{ url_for('admin.donations') }}" id="navAdminDonations">
                                     <i class="bi bi-heart-pulse me-1"></i> Donations
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" href="{{ url_for('admin.wig_requests') }}" id="navAdminWigRequests">
+                                    <i class="bi bi-box2-heart me-1"></i> Wig Requests
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" href="{{ url_for('admin.reports') }}" id="navAdminReports">
+                                    <i class="bi bi-graph-up me-1"></i> Reports
                                 </a>
                             </li>
                             <li class="nav-item">
@@ -99,13 +109,27 @@
                                 </a>
                             </li>
                             <li class="nav-item">
-                                <a class="nav-link" href="{{ url_for('ngo.guidelines') }}" id="navNgoGuidelines">
-                                    <i class="bi bi-card-checklist me-1"></i> Criteria
+                                <a class="nav-link" href="{{ url_for('ngo.donations') }}" id="navNgoDonations">
+                                    <i class="bi bi-heart-pulse me-1"></i> Donations
+                                </a>
+                            </li>
+                            <li class="nav-item dropdown">
+                                <a class="nav-link dropdown-toggle" href="#" id="navNgoInventoryDrop" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                    <i class="bi bi-boxes me-1"></i> Inventory
+                                </a>
+                                <ul class="dropdown-menu shadow border-0 rounded-3">
+                                    <li><a class="dropdown-item" href="{{ url_for('ngo.hair_inventory') }}"><i class="bi bi-scissors me-2"></i> Hair Bundles</a></li>
+                                    <li><a class="dropdown-item" href="{{ url_for('ngo.wig_inventory') }}"><i class="bi bi-person-bounding-box me-2"></i> Natural Wigs</a></li>
+                                </ul>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" href="{{ url_for('ngo.wig_requests') }}" id="navNgoWigRequests">
+                                    <i class="bi bi-gift-fill me-1"></i> Wig Requests
                                 </a>
                             </li>
                             <li class="nav-item">
-                                <a class="nav-link" href="{{ url_for('ngo.donations') }}" id="navNgoDonations">
-                                    <i class="bi bi-heart-pulse me-1"></i> Donations
+                                <a class="nav-link" href="{{ url_for('ngo.guidelines') }}" id="navNgoGuidelines">
+                                    <i class="bi bi-card-checklist me-1"></i> Criteria
                                 </a>
                             </li>
                         {% elif current_user.role == 'donor' %}
@@ -120,6 +144,11 @@
                                 </a>
                             </li>
                             <li class="nav-item">
+                                <a class="nav-link" href="{{ url_for('donor.map_view') }}" id="navDonorMap">
+                                    <i class="bi bi-map me-1"></i> Center Map
+                                </a>
+                            </li>
+                            <li class="nav-item">
                                 <a class="nav-link" href="{{ url_for('donor.appointments') }}" id="navDonorAppointments">
                                     <i class="bi bi-calendar-check me-1"></i> Appointments
                                 </a>
@@ -129,13 +158,24 @@
                                     <i class="bi bi-heart-pulse me-1"></i> My Donations
                                 </a>
                             </li>
+                        {% elif current_user.role == 'recipient' %}
+                            <li class="nav-item">
+                                <a class="nav-link" href="{{ url_for('recipient.new_request') }}" id="navRecipientNewRequest">
+                                    <i class="bi bi-plus-circle me-1"></i> Request a Wig
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" href="{{ url_for('recipient.requests') }}" id="navRecipientRequests">
+                                    <i class="bi bi-box2-heart me-1"></i> My Requests & Tracking
+                                </a>
+                            </li>
                         {% endif %}
 
                         <!-- User Profile Dropdown -->
                         <li class="nav-item dropdown">
                             <a class="nav-link dropdown-toggle d-flex align-items-center gap-2" href="#" id="userDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
                                 <span class="avatar-placeholder" style="width: 34px; height: 34px; font-size: 0.9rem;">
-                                    {{ current_user.name[:1] | upper }}
+                                    {{ (current_user.name or 'U')[:1] | upper }}
                                 </span>
                                 <span class="d-none d-sm-inline fw-semibold text-white">{{ current_user.name }}</span>
                                 <span class="badge badge-role-{{ current_user.role }} text-uppercase ms-1" style="font-size: 0.7rem;">
@@ -256,10 +296,10 @@
         </div>
     </nav>
 
-    <!-- Global Flash Alerts Container -->
-    <div class="container mt-3">
-        {% with messages = get_flashed_messages(with_categories=true) %}
-            {% if messages %}
+    <!-- Global Flash Alerts Container (rendered only when there are messages, so it never leaves a gap under the header) -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            <div class="container mt-3">
                 {% for category, message in messages %}
                     <div class="alert alert-{{ category }} alert-dismissible fade show alert-auto-dismiss shadow-sm d-flex align-items-center gap-2 rounded-3" role="alert">
                         {% if category == 'success' %}
@@ -275,9 +315,9 @@
                         <button type="button" class="btn-close shadow-none" data-bs-dismiss="alert" aria-label="Close"></button>
                     </div>
                 {% endfor %}
-            {% endif %}
-        {% endwith %}
-    </div>
+            </div>
+        {% endif %}
+    {% endwith %}
 
     <!-- Main Content Block -->
     <main class="flex-grow-1">
@@ -289,7 +329,7 @@
         <div class="container">
             <div class="row g-4 mb-4">
                 <!-- Brand & Description -->
-                <div class="col-lg-4 col-md-6">
+                <div class="col-lg-5 col-md-6">
                     <a href="{{ url_for('index') }}" class="footer-brand d-inline-flex align-items-center gap-2 mb-3">
                         <span class="brand-icon" style="width: 32px; height: 32px; font-size: 1rem;"><i class="bi bi-scissors"></i></span>
                         <span>Hair<span style="color: var(--hs-secondary);">Sync</span></span>
@@ -306,24 +346,13 @@
                 </div>
 
                 <!-- Platform Links -->
-                <div class="col-lg-2 col-md-6 col-6">
+                <div class="col-lg-3 col-md-6 col-6">
                     <h6 class="text-white mb-3 fw-bold" style="font-family: 'Outfit', sans-serif;">Platform</h6>
                     <ul class="list-unstyled small d-flex flex-column gap-2">
                         <li><a href="{{ url_for('index') }}" class="footer-link">Home</a></li>
                         <li><a href="{{ url_for('index') }}#about" class="footer-link">About</a></li>
                         <li><a href="{{ url_for('index') }}#how-it-works" class="footer-link">How It Works</a></li>
                         <li><a href="{{ url_for('auth.login') }}" class="footer-link">Login</a></li>
-                    </ul>
-                </div>
-
-                <!-- Roles Links -->
-                <div class="col-lg-2 col-md-6 col-6">
-                    <h6 class="text-white mb-3 fw-bold" style="font-family: 'Outfit', sans-serif;">Get Involved</h6>
-                    <ul class="list-unstyled small d-flex flex-column gap-2">
-                        <li><a href="{{ url_for('auth.register', role='donor') }}" class="footer-link">Hair Donors</a></li>
-                        <li><a href="{{ url_for('auth.register', role='ngo') }}" class="footer-link">NGOs &amp; Centers</a></li>
-                        <li><a href="{{ url_for('auth.register', role='recipient') }}" class="footer-link">Wig Recipients</a></li>
-                        <li><a href="{{ url_for('auth.login') }}" class="footer-link">Admin Portal</a></li>
                     </ul>
                 </div>
 

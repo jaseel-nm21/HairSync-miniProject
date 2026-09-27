@@ -216,6 +216,145 @@ def init_db_if_needed(db_path=None):
                 cur.execute("CREATE INDEX IF NOT EXISTS idx_don_date ON donations(donation_date);")
                 conn.commit()
 
+            # Module 4: hair_inventory
+            cur.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='hair_inventory'")
+            if not cur.fetchone():
+                print("[*] Applying non-destructive migration: creating hair_inventory table...")
+                cur.execute("""
+                    CREATE TABLE IF NOT EXISTS hair_inventory (
+                        id INTEGER PRIMARY KEY AUTOINCREMENT,
+                        ngo_id INTEGER NOT NULL,
+                        donation_id INTEGER UNIQUE DEFAULT NULL,
+                        hair_type TEXT NOT NULL,
+                        hair_length REAL NOT NULL,
+                        hair_condition TEXT NOT NULL,
+                        quantity_or_weight TEXT DEFAULT NULL,
+                        status TEXT NOT NULL DEFAULT 'In Stock' CHECK(status IN ('In Stock', 'In Processing', 'Used in Wig', 'Disposed')),
+                        notes TEXT DEFAULT NULL,
+                        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                        FOREIGN KEY (ngo_id) REFERENCES ngo_profiles (id) ON DELETE CASCADE,
+                        FOREIGN KEY (donation_id) REFERENCES donations (id) ON DELETE SET NULL
+                    );
+                """)
+                cur.execute("CREATE INDEX IF NOT EXISTS idx_hi_ngo ON hair_inventory(ngo_id);")
+                cur.execute("CREATE INDEX IF NOT EXISTS idx_hi_status ON hair_inventory(status);")
+                cur.execute("SELECT id FROM ngo_profiles WHERE id = 1")
+                if cur.fetchone():
+                    cur.execute("""
+                        INSERT OR IGNORE INTO hair_inventory (id, ngo_id, donation_id, hair_type, hair_length, hair_condition, quantity_or_weight, status, notes)
+                        VALUES 
+                        (1, 1, NULL, 'Straight', 32.0, 'Virgin / Untreated', '180 grams', 'In Stock', 'Sanitized high-grade straight hair bundle.'),
+                        (2, 1, NULL, 'Wavy', 28.5, 'Virgin / Untreated', '150 grams', 'In Processing', 'Currently in sorting and sanitization.');
+                    """)
+                conn.commit()
+
+            # Module 4: wigs
+            cur.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='wigs'")
+            if not cur.fetchone():
+                print("[*] Applying non-destructive migration: creating wigs table...")
+                cur.execute("""
+                    CREATE TABLE IF NOT EXISTS wigs (
+                        id INTEGER PRIMARY KEY AUTOINCREMENT,
+                        ngo_id INTEGER NOT NULL,
+                        wig_type TEXT NOT NULL,
+                        hair_source TEXT NOT NULL DEFAULT 'Natural' CHECK(hair_source IN ('Natural', 'Synthetic', 'Blend')),
+                        hair_color TEXT NOT NULL,
+                        hair_length REAL NOT NULL,
+                        size TEXT NOT NULL DEFAULT 'Medium' CHECK(size IN ('Small', 'Medium', 'Large', 'Adjustable')),
+                        condition TEXT NOT NULL DEFAULT 'New / Sanitized',
+                        status TEXT NOT NULL DEFAULT 'Available' CHECK(status IN ('Available', 'Assigned', 'In Preparation', 'Dispatched', 'Delivered')),
+                        notes TEXT DEFAULT NULL,
+                        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                        FOREIGN KEY (ngo_id) REFERENCES ngo_profiles (id) ON DELETE CASCADE
+                    );
+                """)
+                cur.execute("CREATE INDEX IF NOT EXISTS idx_wig_ngo ON wigs(ngo_id);")
+                cur.execute("CREATE INDEX IF NOT EXISTS idx_wig_status ON wigs(status);")
+                cur.execute("SELECT id FROM ngo_profiles WHERE id = 1")
+                if cur.fetchone():
+                    cur.execute("""
+                        INSERT OR IGNORE INTO wigs (id, ngo_id, wig_type, hair_source, hair_color, hair_length, size, condition, status, notes)
+                        VALUES
+                        (1, 1, 'Medium Wavy Crown', 'Natural', 'Natural Dark Brown', 30.0, 'Medium', 'New / Sanitized', 'Available', '100% natural human hair wig with breathable lightweight cap.'),
+                        (2, 1, 'Short Classic Bob', 'Natural', 'Natural Jet Black', 22.0, 'Small', 'New / Sanitized', 'Available', 'Crafted for pediatric chemotherapy patients with soft perimeter tape.');
+                    """)
+                conn.commit()
+
+            # Module 5: wig_requests
+            cur.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='wig_requests'")
+            if not cur.fetchone():
+                print("[*] Applying non-destructive migration: creating wig_requests table...")
+                cur.execute("""
+                    CREATE TABLE IF NOT EXISTS wig_requests (
+                        id INTEGER PRIMARY KEY AUTOINCREMENT,
+                        recipient_id INTEGER NOT NULL,
+                        ngo_id INTEGER DEFAULT NULL,
+                        assigned_wig_id INTEGER UNIQUE DEFAULT NULL,
+                        preferred_wig_type TEXT NOT NULL,
+                        hair_source TEXT NOT NULL DEFAULT 'Natural',
+                        preferred_length REAL NOT NULL,
+                        preferred_color TEXT NOT NULL,
+                        preferred_size TEXT NOT NULL DEFAULT 'Medium',
+                        reason_for_request TEXT NOT NULL,
+                        delivery_address TEXT NOT NULL,
+                        delivery_city TEXT NOT NULL,
+                        delivery_district TEXT NOT NULL,
+                        delivery_pincode TEXT NOT NULL,
+                        contact_phone TEXT NOT NULL,
+                        additional_notes TEXT DEFAULT NULL,
+                        status TEXT NOT NULL DEFAULT 'Submitted' CHECK(status IN ('Submitted', 'Under Review', 'Approved', 'Rejected', 'Wig Assigned', 'Preparing', 'Ready for Dispatch', 'Dispatched', 'In Transit', 'Out for Delivery', 'Delivered')),
+                        rejection_reason TEXT DEFAULT NULL,
+                        tracking_number TEXT DEFAULT NULL,
+                        courier_service TEXT DEFAULT NULL,
+                        estimated_delivery_date TEXT DEFAULT NULL,
+                        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                        FOREIGN KEY (recipient_id) REFERENCES recipient_profiles (id) ON DELETE CASCADE,
+                        FOREIGN KEY (ngo_id) REFERENCES ngo_profiles (id) ON DELETE SET NULL,
+                        FOREIGN KEY (assigned_wig_id) REFERENCES wigs (id) ON DELETE SET NULL
+                    );
+                """)
+                cur.execute("CREATE INDEX IF NOT EXISTS idx_wr_recipient ON wig_requests(recipient_id);")
+                cur.execute("CREATE INDEX IF NOT EXISTS idx_wr_ngo ON wig_requests(ngo_id);")
+                cur.execute("CREATE INDEX IF NOT EXISTS idx_wr_status ON wig_requests(status);")
+                cur.execute("SELECT id FROM recipient_profiles WHERE id = 1")
+                if cur.fetchone():
+                    cur.execute("""
+                        INSERT OR IGNORE INTO wig_requests (id, recipient_id, ngo_id, assigned_wig_id, preferred_wig_type, hair_source, preferred_length, preferred_color, preferred_size, reason_for_request, delivery_address, delivery_city, delivery_district, delivery_pincode, contact_phone, additional_notes, status)
+                        VALUES
+                        (1, 1, 1, NULL, 'Medium Wavy Crown', 'Natural', 30.0, 'Natural Dark Brown', 'Medium', 'Undergoing chemotherapy for breast cancer; requesting natural wig.', 'House No 23, Rose Gardens, Kowdiar', 'Thiruvananthapuram', 'Thiruvananthapuram', '695003', '+91 9988776655', 'Prefer lightweight inner mesh.', 'Under Review');
+                    """)
+                conn.commit()
+
+            # Module 6: wig_tracking_logs
+            cur.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='wig_tracking_logs'")
+            if not cur.fetchone():
+                print("[*] Applying non-destructive migration: creating wig_tracking_logs table...")
+                cur.execute("""
+                    CREATE TABLE IF NOT EXISTS wig_tracking_logs (
+                        id INTEGER PRIMARY KEY AUTOINCREMENT,
+                        wig_request_id INTEGER NOT NULL,
+                        status TEXT NOT NULL,
+                        remarks TEXT DEFAULT NULL,
+                        updated_by_user_id INTEGER DEFAULT NULL,
+                        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                        FOREIGN KEY (wig_request_id) REFERENCES wig_requests (id) ON DELETE CASCADE,
+                        FOREIGN KEY (updated_by_user_id) REFERENCES users (id) ON DELETE SET NULL
+                    );
+                """)
+                cur.execute("CREATE INDEX IF NOT EXISTS idx_wtl_request ON wig_tracking_logs(wig_request_id);")
+                cur.execute("SELECT id FROM wig_requests WHERE id = 1")
+                if cur.fetchone():
+                    cur.execute("""
+                        INSERT OR IGNORE INTO wig_tracking_logs (wig_request_id, status, remarks, updated_by_user_id)
+                        VALUES
+                        (1, 'Submitted', 'Recipient submitted request for natural-hair wig.', 5),
+                        (1, 'Under Review', 'Application received and currently under medical verification by Hope Hair Foundation.', 2);
+                    """)
+                conn.commit()
+
             conn.close()
         except Exception as e:
             print(f"[-] Migration check warning: {e}")

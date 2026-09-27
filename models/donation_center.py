@@ -281,3 +281,11 @@ class DonationCenter:
         """
         rows = query_db(sql)
         return [r['district'] for r in rows if r.get('district')]
+
+    @staticmethod
+    def count():
+        """Returns total count of donation centers."""
+        sql = "SELECT COUNT(*) as count FROM donation_centers"
+        res = query_db(sql, one=True)
+        return res['count'] if res else 0
+
